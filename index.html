@@ -56,6 +56,7 @@ const $=id=>document.getElementById(id);
 const norm=s=>String(s||'').toLowerCase().replace(/[\u064B-\u065F\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[^\p{L}\p{N}]+/g,' ').trim();
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let roster=[],att=null,openG=null;
+const isName=s=>{const t=String(s||'').trim();return !!t&&/\p{L}/u.test(t)&&!/^[\d\s.+\-\/]+$/.test(t)&&!/^(total|name|الاسم|اسم|المجموع|الاجمالي)\b/i.test(t)};
 
 async function loadRoster(){
   let all=[];
@@ -68,24 +69,25 @@ async function loadRoster(){
     rows.forEach((row,i)=>{
       if(i===0)return;
       const a=String(row[0]||'').trim();if(a)g=a;
-      const girl=row.slice(1).map(x=>String(x||'').trim()).find(x=>x);
-      if(g&&girl)all.push({g,n:girl});
+            const cells=row.slice(1).map(x=>String(x||'').trim()).filter(x=>x);
+      if(cells.length<2)return; // satr 3onwan mesh bent
+      if(g&&isName(cells[0]))all.push({g,n:cells[0]});
     });
   }
   return all;
 }
 function parseAtt(rows){
   const clean=x=>String(x||'').replace(/[()\[\]]/g,'').trim().toLowerCase();
-  const hi=rows.findIndex(r=>r.some(c=>clean(c)==='attendance'));
-  const ai=hi>=0?rows[hi].findIndex(c=>clean(c)==='attendance'):10;
-  const ni=hi>=0?rows[hi].findIndex(c=>/name|الاسم|اسم/i.test(String(c))):-1;
-  const res=[];
-  rows.forEach((r,i)=>{
-    if(i<=hi)return;
+  const hasHdr=rows.some(r=>r.some(c=>clean(c)==='attendance'));
+  let ai=hasHdr?-1:10,ni=-1;const res=[];
+  rows.forEach(r=>{
+    const h=r.findIndex(c=>clean(c)==='attendance');
+    if(h>=0){ai=h;ni=r.findIndex(c=>/name|الاسم|اسم/i.test(String(c)));return}
+    if(ai<0)return;
     const v=clean(r[ai]);if(v!=='yes'&&v!=='no')return;
     let name=ni>=0?String(r[ni]||'').trim():'';
-    if(!name)name=r.map(x=>String(x||'').trim()).find((x,j)=>j!==ai&&x&&isNaN(x)&&!/^\(?(yes|no)\)?$/i.test(x));
-    if(name)res.push({n:name,no:v==='no'});
+    if(!isName(name))name=r.map(x=>String(x||'').trim()).find((x,j)=>j!==ai&&isName(x))||'';
+    if(isName(name))res.push({n:name,no:v==='no'});
   });
   return res;
 }
@@ -106,6 +108,7 @@ $('okBtn').onclick=async()=>{
     const unm=rows.filter(x=>!known.has(norm(x.n)));
     m.innerHTML=`<span class="good">✔ تم الحفظ (${rows.length} صف، No: ${rows.filter(x=>x.no).length})</span>`+(unm.length?`<p class="bad">أسماء مش مطابقة لشيت الأسماء: ${unm.map(x=>esc(x.n)).join('، ')}</p>`:'');
     await loadAtt();
+    +`<p class="mut">اللي اتسجلوا No: ${rows.filter(x=>x.no).map(x=>esc(x.n)).join('، ')||'—'}</p>`
   }catch(e){m.innerHTML='<span class="bad">فشل الحفظ: '+esc(e.message)+'</span>'}
   b.disabled=false;
 };
