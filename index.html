@@ -53,33 +53,35 @@ const SHEET_NAMES = ["أسرة القديسة بربتوا", "أسرة القد�
 /* =================================== */
 
 const $=id=>document.getElementById(id);
-const norm=s=>String(s||'').toLowerCase().replace(/[\u064B-\u065F\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[^\p{L}\p{N}]+/g,' ').trim();
+const norm=s=>String(s||'').toLowerCase().replace(/[\u064B-\u065F\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const isName=s=>{const t=String(s||'').trim();return !!t&&/\p{L}/u.test(t)&&!/^[\d\s.+\-\/]+$/.test(t)&&!/^(total|name|الاسم|اسم|المجموع|الاجمالي)$/i.test(t)};
+// نفس الاسم، أو اسم مختصر (3 كلمات على الأقل) هو بداية الاسم الكامل
+const same=(a,b)=>{if(a===b)return true;const x=a.split(' '),y=b.split(' ');const s=x.length<y.length?x:y,l=x.length<y.length?y:x;return s.length>=3&&s.every((w,i)=>w===l[i])};
 let roster=[],att=null,openG=null;
-const isName=s=>{const t=String(s||'').trim();return !!t&&/\p{L}/u.test(t)&&!/^[\d\s.+\-\/]+$/.test(t)&&!/^(total|name|الاسم|اسم|المجموع|الاجمالي)\b/i.test(t)};
 
 async function loadRoster(){
   let all=[];
   for(const name of SHEET_NAMES){
     const url=`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
-    const r=await fetch(url);if(!r.ok)throw new Error('!تعذّر فتح الشيت: '+name);
+    const r=await fetch(url);if(!r.ok)throw new Error('تعذّر فتح الشيت: '+name);
     const wb=XLSX.read(await r.text(),{type:'string'});
     const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
     let g='';
     rows.forEach((row,i)=>{
       if(i===0)return;
       const a=String(row[0]||'').trim();if(a)g=a;
-            const cells=row.slice(1).map(x=>String(x||'').trim()).filter(x=>x);
-      if(cells.length<2)return; // satr 3onwan mesh bent
-      if(g&&isName(cells[0]))all.push({g,n:cells[0]});
+      const cells=row.slice(1).map(x=>String(x||'').trim()).filter(x=>x);
+      if(g&&cells.length&&isName(cells[0]))all.push({g,n:cells[0]});
     });
   }
   return all;
 }
+
 function parseAtt(rows){
   const clean=x=>String(x||'').replace(/[()\[\]]/g,'').trim().toLowerCase();
   const hasHdr=rows.some(r=>r.some(c=>clean(c)==='attendance'));
-  let ai=hasHdr?-1:10,ni=-1;const res=[];
+  let ai=hasHdr?-1:10,ni=-1;const map=new Map();
   rows.forEach(r=>{
     const h=r.findIndex(c=>clean(c)==='attendance');
     if(h>=0){ai=h;ni=r.findIndex(c=>/name|الاسم|اسم/i.test(String(c)));return}
@@ -87,9 +89,9 @@ function parseAtt(rows){
     const v=clean(r[ai]);if(v!=='yes'&&v!=='no')return;
     let name=ni>=0?String(r[ni]||'').trim():'';
     if(!isName(name))name=r.map(x=>String(x||'').trim()).find((x,j)=>j!==ai&&isName(x))||'';
-    if(isName(name))res.push({n:name,no:v==='no'});
+    if(isName(name))map.set(norm(name),{n:name,no:v==='no'});
   });
-  return res;
+  return [...map.values()];
 }
 
 $('okBtn').onclick=async()=>{
@@ -104,11 +106,10 @@ $('okBtn').onclick=async()=>{
     const r=await fetch('/api/attendance',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:$('pw').value,rows})});
     if(r.status===401)throw new Error('الباسورد غلط');
     if(!r.ok)throw new Error(await r.text()||'حصل خطأ');
-    const known=new Set(roster.map(x=>norm(x.n)));
-    const unm=rows.filter(x=>!known.has(norm(x.n)));
-    m.innerHTML=`<span class="good">✔ تم الحفظ (${rows.length} صف، No: ${rows.filter(x=>x.no).length})</span>`+(unm.length?`<p class="bad">أسماء مش مطابقة لشيت الأسماء: ${unm.map(x=>esc(x.n)).join('، ')}</p>`:'');
+    const rk=roster.map(x=>norm(x.n));
+    const unm=rows.filter(x=>{const k=norm(x.n);return !rk.some(y=>same(y,k))});
+    m.innerHTML=`<span class="good">✔ تم الحفظ — Yes: ${rows.filter(x=>!x.no).length} · No: ${rows.filter(x=>x.no).length}</span>`+(unm.length?`<p class="mut">أسماء في شيت الحضور مش موجودة في شيت الأسماء (${unm.length}): ${unm.map(x=>esc(x.n)).join('، ')}</p>`:'');
     await loadAtt();
-    +`<p class="mut">اللي اتسجلوا No: ${rows.filter(x=>x.no).map(x=>esc(x.n)).join('، ')||'—'}</p>`
   }catch(e){m.innerHTML='<span class="bad">فشل الحفظ: '+esc(e.message)+'</span>'}
   b.disabled=false;
 };
@@ -116,11 +117,14 @@ $('okBtn').onclick=async()=>{
 function render(){
   const v=$('viewer');
   if(!roster.length){return}
-  const no=new Set(((att&&att.rows)||[]).filter(x=>x.no).map(x=>norm(x.n)));
+  const A=((att&&att.rows)||[]).map(r=>({k:norm(r.n),no:r.no}));
+  const st=n=>{const k=norm(n);const e=A.find(a=>same(a.k,k));return e?e.no:null};
   const groups={};roster.forEach(x=>(groups[x.g]=groups[x.g]||[]).push(x.n));
   let h=att?`<p class="mut">آخر تحديث للحضور: ${new Date(att.at).toLocaleString('ar-EG')}</p>`:'<p class="mut">لسه مفيش شيت حضور اترفع.</p>';
   Object.keys(groups).forEach(g=>{
-    const miss=groups[g].filter(n=>no.has(norm(n)));
+    const sts=groups[g].map(st);
+    if(att&&!sts.some(s=>s!==null))return; // تاسوني مفيهوش ولا اسم في شيت الحضور
+    const miss=groups[g].filter((n,i)=>sts[i]===true);
     h+=`<button class="grp ${openG===g?'open':''}" data-g="${esc(g)}"><span>${esc(g)}</span><span class="badge ${miss.length?'':'z'}">${miss.length}</span></button>`;
     if(openG===g)h+=`<div class="list">${miss.length?miss.map(n=>`<div class="girl">❌ ${esc(n)}</div>`).join(''):'<div class="girl good">كلهم حاضرين ✔</div>'}</div>`;
   });
