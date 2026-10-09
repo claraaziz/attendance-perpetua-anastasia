@@ -15,6 +15,7 @@ module.exports = async (req, res) => {
       if (!process.env.ADMIN_PASSWORD || body.password !== process.env.ADMIN_PASSWORD) {
         return res.status(401).send("unauthorized");
       }
+      if (!process.env.BLOB_READ_WRITE_TOKEN) return res.status(500).send("Blob storage مش متوصل بالمشروع (Storage > Connect to Project ثم Redeploy)");
       if (!Array.isArray(body.rows)) return res.status(400).send("bad request");
       const rows = body.rows.map((r) => ({ n: String(r.n), no: !!r.no }));
       await put("attendance-latest.json", JSON.stringify({ rows, at: Date.now() }), {

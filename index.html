@@ -5,50 +5,58 @@
 <title>الحضور والغياب</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-:root{--bg:#faf7f5;--fg:#2a2326;--card:#fff;--bd:#e7dfe2;--ac:#b83a6b;--mut:#7d7075;--no:#c0392b;--ok:#1e8a5a}
+:root{--p1:#6d3fc0;--p2:#d6458f;--bg:#f6f1fb;--fg:#2b2236;--card:#fff;--bd:#eadff5;--mut:#85779a;--no:#d6335a;--ok:#1f9d6b}
+*{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,"Segoe UI",Tahoma,sans-serif}
-main{max-width:720px;margin:0 auto;padding:16px}
-h1{font-size:1.3rem;margin:.2em 0 .8em;display:flex;justify-content:space-between;align-items:center}
-button,input{font:inherit;padding:10px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg)}
-button{cursor:pointer}button.pri{background:var(--ac);color:#fff;border-color:var(--ac)}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:14px}
-.card h2{font-size:1rem;margin:0 0 10px}
-.mut{color:var(--mut);font-size:.88rem}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
-.grp{display:flex;justify-content:space-between;width:100%;text-align:start;margin-bottom:8px}
-.badge{background:var(--no);color:#fff;border-radius:99px;padding:0 10px;font-size:.85rem}
+header{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;padding:26px 16px 56px;text-align:center}
+header h1{margin:0;font-size:1.5rem}header p{margin:6px 0 0;opacity:.85;font-size:.9rem}
+main{max-width:720px;margin:-34px auto 40px;padding:0 14px}
+.tabs{display:flex;background:var(--card);border-radius:16px;padding:5px;box-shadow:0 6px 20px rgba(109,63,192,.15);margin-bottom:16px}
+.tabs button{flex:1;border:0;background:none;padding:12px;border-radius:12px;font:inherit;font-weight:600;color:var(--mut);cursor:pointer}
+.tabs button.on{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(109,63,192,.06)}
+.card h2{font-size:1.05rem;margin:0 0 12px;color:var(--p1)}
+.grp{display:flex;justify-content:space-between;align-items:center;width:100%;border:1px solid var(--bd);background:var(--card);border-radius:14px;padding:15px 16px;margin-bottom:6px;font:inherit;font-weight:600;color:var(--fg);cursor:pointer;border-inline-start:6px solid var(--p1)}
+.grp.open{background:#f1e8fb}
+.badge{background:var(--no);color:#fff;border-radius:99px;padding:2px 12px;font-size:.85rem}
 .badge.z{background:var(--ok)}
-.girl{padding:9px 12px;border-bottom:1px solid var(--bd)}
-.bad{color:var(--no)}.good{color:var(--ok)}
+.list{background:#fff;border:1px solid var(--bd);border-radius:14px;margin:0 6px 12px;overflow:hidden}
+.girl{padding:11px 14px;border-bottom:1px solid var(--bd)}
+.girl:last-child{border:0}
+input[type=password],input[type=file]{width:100%;padding:12px;border:1px solid var(--bd);border-radius:12px;font:inherit;margin-bottom:10px;background:#fcfaff}
+.ok{width:100%;border:0;padding:13px;border-radius:12px;font:inherit;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--p1),var(--p2));cursor:pointer}
+.ok:disabled{opacity:.6}
+.mut{color:var(--mut);font-size:.88rem}.bad{color:var(--no)}.good{color:var(--ok)}
 </style>
 </head>
 <body>
+<header><h1>📋 الحضور والغياب</h1><p>أسرة القديسة بربتوا · أسرة القديسة أناسطاسية</p></header>
 <main>
-<h1>📋 الحضور والغياب <button id="adminBtn">دخول الأدمن</button></h1>
+<div class="tabs"><button id="tV" class="on">الغياب</button><button id="tA">الأدمن</button></div>
 
-<div id="admin" class="card" style="display:none">
-  <h2>رفع شيت الحضور (عمود Attendance بقيم (Yes) / (No))</h2>
-  <div class="row"><input id="pw" type="password" placeholder="باسورد الأدمن" dir="ltr"><input type="file" id="aFile" accept=".xlsx,.xls,.csv"></div>
-  <div id="aMsg" class="mut"></div>
-  <div id="aPrev"></div>
-</div>
+<section id="vV"><div id="viewer" class="mut">جاري التحميل…</div></section>
 
-<div id="viewer" class="mut">جاري التحميل…</div>
+<section id="vA" style="display:none" class="card">
+  <h2>رفع شيت الحضور</h2>
+  <input id="pw" type="password" placeholder="باسورد الأدمن" dir="ltr">
+  <input type="file" id="aFile" accept=".xlsx,.xls,.csv">
+  <button class="ok" id="okBtn">OK ✔</button>
+  <div id="aMsg" style="margin-top:12px"></div>
+</section>
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-/* ============ الإعدادات — غيّرها بس ============ */
-const SPREADSHEET_ID = "1ziPq8DvCJkDaVfAFP9chlyUlyuhl_i-way2lyb2eev8"; // الجزء اللي بين /d/ و /edit في اللينك
+/* ============ الإعدادات ============ */
+const SPREADSHEET_ID = "1FcAeRnSQDavdwoDxCf6LHgtia7nwRH6nfL335Syt3no";
 const SHEET_NAMES = ["أسرة القديسة بربتوا", "أسرة القديسة أناسطاسية"];
-/* ============================================== */
+/* =================================== */
 
 const $=id=>document.getElementById(id);
 const norm=s=>String(s||'').toLowerCase().replace(/[\u064B-\u065F\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[^\p{L}\p{N}]+/g,' ').trim();
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let roster=[],att=null,openG=null,pending=null;
+let roster=[],att=null,openG=null;
 
-/* ---- شيت الأسماء من Google Sheets مباشرة ---- */
 async function loadRoster(){
   let all=[];
   for(const name of SHEET_NAMES){
@@ -58,16 +66,14 @@ async function loadRoster(){
     const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
     let g='';
     rows.forEach((row,i)=>{
-      if(i===0)return; // صف العناوين
-      const a=String(row[0]||'').trim();if(a)g=a; // الخلايا المدمجة بتيجي فاضية فبنكمل من اللي فوق
+      if(i===0)return;
+      const a=String(row[0]||'').trim();if(a)g=a;
       const girl=row.slice(1).map(x=>String(x||'').trim()).find(x=>x);
       if(g&&girl)all.push({g,n:girl});
     });
   }
   return all;
 }
-
-/* ---- شيت الحضور ---- */
 function parseAtt(rows){
   const clean=x=>String(x||'').replace(/[()\[\]]/g,'').trim().toLowerCase();
   const hi=rows.findIndex(r=>r.some(c=>clean(c)==='attendance'));
@@ -83,47 +89,49 @@ function parseAtt(rows){
   });
   return res;
 }
-$('aFile').onchange=async e=>{
-  const f=e.target.files[0];if(!f)return;
-  const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
-  pending=parseAtt(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false}));
-  if(!pending.length){$('aMsg').innerHTML='<span class="bad">مفيش صفوف (Yes)/(No) في الملف</span>';return}
-  const known=new Set(roster.map(x=>norm(x.n)));
-  const unm=pending.filter(x=>!known.has(norm(x.n)));
-  $('aMsg').textContent=`${pending.length} صف · No: ${pending.filter(x=>x.no).length} · أسماء مش مطابقة: ${unm.length}`;
-  $('aPrev').innerHTML=(unm.length?`<p class="bad">${unm.map(x=>esc(x.n)).join('، ')}</p>`:'')+'<button class="pri" id="sv">حفظ ونشر</button>';
-  $('sv').onclick=async()=>{
-    try{
-      const r=await fetch('/api/attendance',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:$('pw').value,rows:pending})});
-      if(r.status===401)throw new Error('الباسورد غلط');
-      if(!r.ok)throw new Error('حصل خطأ');
-      $('aPrev').innerHTML='<p class="good">✔ تم النشر</p>';loadAtt();
-    }catch(x){$('aPrev').innerHTML='<p class="bad">فشل الحفظ: '+esc(x.message)+'</p>'}
-  };
+
+$('okBtn').onclick=async()=>{
+  const f=$('aFile').files[0],m=$('aMsg'),b=$('okBtn');
+  if(!f){m.innerHTML='<span class="bad">اختار الملف الأول</span>';return}
+  if(!$('pw').value){m.innerHTML='<span class="bad">اكتب الباسورد</span>';return}
+  b.disabled=true;m.textContent='جاري الحفظ…';
+  try{
+    const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+    const rows=parseAtt(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false}));
+    if(!rows.length)throw new Error('مفيش صفوف (Yes)/(No) في الملف — اتأكد من عمود Attendance');
+    const r=await fetch('/api/attendance',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:$('pw').value,rows})});
+    if(r.status===401)throw new Error('الباسورد غلط');
+    if(!r.ok)throw new Error(await r.text()||'حصل خطأ');
+    const known=new Set(roster.map(x=>norm(x.n)));
+    const unm=rows.filter(x=>!known.has(norm(x.n)));
+    m.innerHTML=`<span class="good">✔ تم الحفظ (${rows.length} صف، No: ${rows.filter(x=>x.no).length})</span>`+(unm.length?`<p class="bad">أسماء مش مطابقة لشيت الأسماء: ${unm.map(x=>esc(x.n)).join('، ')}</p>`:'');
+    await loadAtt();
+  }catch(e){m.innerHTML='<span class="bad">فشل الحفظ: '+esc(e.message)+'</span>'}
+  b.disabled=false;
 };
 
-/* ---- العرض ---- */
 function render(){
   const v=$('viewer');
-  if(!roster.length){v.textContent='مفيش أسماء.';return}
+  if(!roster.length){return}
   const no=new Set(((att&&att.rows)||[]).filter(x=>x.no).map(x=>norm(x.n)));
   const groups={};roster.forEach(x=>(groups[x.g]=groups[x.g]||[]).push(x.n));
-  let h=att?`<p class="mut">آخر تحديث للحضور: ${new Date(att.at).toLocaleString('ar-EG')}</p>`:'<p class="mut">لسه مفيش شيت حضور.</p>';
+  let h=att?`<p class="mut">آخر تحديث للحضور: ${new Date(att.at).toLocaleString('ar-EG')}</p>`:'<p class="mut">لسه مفيش شيت حضور اترفع.</p>';
   Object.keys(groups).forEach(g=>{
     const miss=groups[g].filter(n=>no.has(norm(n)));
-    h+=`<button class="grp" data-g="${esc(g)}"><span>${esc(g)}</span><span class="badge ${miss.length?'':'z'}">${miss.length}</span></button>`;
-    if(openG===g)h+=`<div class="card">${miss.length?miss.map(n=>`<div class="girl">❌ ${esc(n)}</div>`).join(''):'<div class="girl good">كلهم حاضرين ✔</div>'}</div>`;
+    h+=`<button class="grp ${openG===g?'open':''}" data-g="${esc(g)}"><span>${esc(g)}</span><span class="badge ${miss.length?'':'z'}">${miss.length}</span></button>`;
+    if(openG===g)h+=`<div class="list">${miss.length?miss.map(n=>`<div class="girl">❌ ${esc(n)}</div>`).join(''):'<div class="girl good">كلهم حاضرين ✔</div>'}</div>`;
   });
   v.innerHTML=h;
   v.querySelectorAll('.grp').forEach(b=>b.onclick=()=>{openG=openG===b.dataset.g?null:b.dataset.g;render()});
 }
 
+function tab(a){$('vA').style.display=a?'':'none';$('vV').style.display=a?'none':'';$('tA').classList.toggle('on',a);$('tV').classList.toggle('on',!a)}
+$('tV').onclick=()=>tab(false);$('tA').onclick=()=>tab(true);
+
 async function loadAtt(){try{const r=await fetch('/api/attendance');att=await r.json();render()}catch(e){}}
-/* ---- تشغيل ---- */
 (async()=>{
   try{roster=await loadRoster();render()}
-  catch(e){$('viewer').innerHTML='<span class="bad">'+esc(e.message)+'<br>اتأكد إن الشيت Share ▸ Anyone with the link ▸ Viewer وإن أسماء الشيتات صح.</span>';}
-  $('adminBtn').onclick=()=>{const a=$('admin');a.style.display=a.style.display?'':'none'};
+  catch(e){$('viewer').innerHTML='<span class="bad">'+esc(e.message)+'<br>اتأكد إن الشيت Share ▸ Anyone with the link ▸ Viewer وإن SPREADSHEET_ID صح.</span>'}
   loadAtt();
 })();
 </script>
