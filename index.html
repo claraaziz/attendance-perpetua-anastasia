@@ -61,7 +61,7 @@ async function loadRoster(){
   let all=[];
   for(const name of SHEET_NAMES){
     const url=`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
-    const r=await fetch(url);if(!r.ok)throw new Error('تعذّر فتح الشيت: '+name);
+    const r=await fetch(url);if(!r.ok)throw new Error('!تعذّر فتح الشيت: '+name);
     const wb=XLSX.read(await r.text(),{type:'string'});
     const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
     let g='';
