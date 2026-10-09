@@ -27,6 +27,11 @@ input[type=password],input[type=file]{width:100%;padding:12px;border:1px solid v
 .ok{width:100%;border:0;padding:13px;border-radius:12px;font:inherit;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--p1),var(--p2));cursor:pointer}
 .ok:disabled{opacity:.6}
 .mut{color:var(--mut);font-size:.88rem}.bad{color:var(--no)}.good{color:var(--ok)}
+.girl{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.acts{display:flex;gap:8px;flex-shrink:0}
+.acts a{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.acts svg{width:18px;height:18px;fill:#fff}
+.acts .call{background:var(--p1)}.acts .wa{background:#25d366}
 </style>
 </head>
 <body>
@@ -58,6 +63,19 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const isName=s=>{const t=String(s||'').trim();return !!t&&/\p{L}/u.test(t)&&!/^[\d\s.+\-\/]+$/.test(t)&&!/^(total|name|الاسم|اسم|المجموع|الاجمالي)$/i.test(t)};
 // نفس الاسم، أو اسم مختصر (3 كلمات على الأقل) هو بداية الاسم الكامل
 const same=(a,b)=>{if(a===b)return true;const x=a.split(' '),y=b.split(' ');const s=x.length<y.length?x:y,l=x.length<y.length?y:x;return s.length>=3&&s.every((w,i)=>w===l[i])};
+const phoneOf=raw=>{
+  const s=String(raw||'').replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c));
+  const part=s.split(/[,;\/\n،]|\s{2,}/).map(x=>x.replace(/\D/g,'')).find(x=>x.length>=9);
+  if(!part)return null;
+  let d=part;
+  if(d.startsWith('00'))d=d.slice(2);
+  else if(d.startsWith('0'))d='20'+d.slice(1);
+  else if(d.length===10&&d.startsWith('1'))d='20'+d;
+  return d;
+};
+const ICON_CALL='<svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
+const ICON_WA='<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>';
+const acts=p=>p?`<span class="acts"><a class="call" href="tel:+${p}" title="اتصال">${ICON_CALL}</a><a class="wa" href="https://wa.me/${p}" target="_blank" rel="noopener" title="واتساب">${ICON_WA}</a></span>`:'<span class="mut">مفيش رقم</span>';
 let roster=[],att=null,openG=null;
 
 async function loadRoster(){
@@ -67,12 +85,14 @@ async function loadRoster(){
     const r=await fetch(url);if(!r.ok)throw new Error('تعذّر فتح الشيت: '+name);
     const wb=XLSX.read(await r.text(),{type:'string'});
     const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
-    let g='';
+        let g='';
+    let pi=(rows[0]||[]).findIndex(c=>/(^|\s)الام(\s|$)/.test(norm(c)));
+    if(pi<0)pi=8; // عمود I
     rows.forEach((row,i)=>{
       if(i===0)return;
       const a=String(row[0]||'').trim();if(a)g=a;
       const cells=row.slice(1).map(x=>String(x||'').trim()).filter(x=>x);
-      if(g&&cells.length&&isName(cells[0]))all.push({g,n:cells[0]});
+      if(g&&cells.length&&isName(cells[0]))all.push({g,n:cells[0],p:phoneOf(row[pi])});
     });
   }
   return all;
@@ -119,14 +139,14 @@ function render(){
   if(!roster.length){return}
   const A=((att&&att.rows)||[]).map(r=>({k:norm(r.n),no:r.no}));
   const st=n=>{const k=norm(n);const e=A.find(a=>same(a.k,k));return e?e.no:null};
-  const groups={};roster.forEach(x=>(groups[x.g]=groups[x.g]||[]).push(x.n));
+  const groups={};roster.forEach(x=>(groups[x.g]=groups[x.g]||[]).push(x));
   let h=att?`<p class="mut">آخر تحديث للحضور: ${new Date(att.at).toLocaleString('ar-EG')}</p>`:'<p class="mut">لسه مفيش شيت حضور اترفع.</p>';
   Object.keys(groups).forEach(g=>{
-    const sts=groups[g].map(st);
-    if(att&&!sts.some(s=>s!==null))return; // تاسوني مفيهوش ولا اسم في شيت الحضور
-    const miss=groups[g].filter((n,i)=>sts[i]===true);
+    const sts=groups[g].map(x=>st(x.n));
+    if(att&&!sts.some(s=>s!==null))return;
+    const miss=groups[g].filter((x,i)=>sts[i]===true);
     h+=`<button class="grp ${openG===g?'open':''}" data-g="${esc(g)}"><span>${esc(g)}</span><span class="badge ${miss.length?'':'z'}">${miss.length}</span></button>`;
-    if(openG===g)h+=`<div class="list">${miss.length?miss.map(n=>`<div class="girl">❌ ${esc(n)}</div>`).join(''):'<div class="girl good">كلهم حاضرين ✔</div>'}</div>`;
+    if(openG===g)h+=`<div class="list">${miss.length?miss.map(x=>`<div class="girl"><span>❌ ${esc(x.n)}</span>${acts(x.p)}</div>`).join(''):'<div class="girl good">كلهم حاضرين ✔</div>'}</div>`;
   });
   v.innerHTML=h;
   v.querySelectorAll('.grp').forEach(b=>b.onclick=()=>{openG=openG===b.dataset.g?null:b.dataset.g;render()});
