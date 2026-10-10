@@ -28,7 +28,8 @@ module.exports = async (req, res) => {
       if (!token) return res.status(500).send("v4: مفيش token للـ Blob");
       if (!Array.isArray(body.rows)) return res.status(400).send("bad request");
       const rows = body.rows.map((r) => ({ n: String(r.n), no: !!r.no }));
-      await put(NAME, JSON.stringify({ rows, at: Date.now() }), {
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(body.date || "") ? body.date : "";
+      await put(NAME, JSON.stringify({ rows, date, at: Date.now() }), {
         access: "private",
         addRandomSuffix: false,
         allowOverwrite: true,
@@ -42,5 +43,4 @@ module.exports = async (req, res) => {
   } catch (e) {
     return res.status(500).send("v4: " + String(e.message || e));
   }
-  //test
 };
