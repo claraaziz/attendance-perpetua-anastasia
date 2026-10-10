@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>افتقاد التليفون</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext x=%2250%22 y=%2282%22 font-size=%2285%22 text-anchor=%22middle%22%3E✝️%3C/text%3E%3C/svg%3E">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 :root{--p1:#6d3fc0;--p2:#d6458f;--bg:#f6f1fb;--fg:#2b2236;--card:#fff;--bd:#eadff5;--mut:#85779a;--no:#d6335a;--ok:#1f9d6b;--ease:cubic-bezier(.22,1,.36,1)}
@@ -17,12 +18,10 @@ header p{margin:6px 0 0;opacity:.85;font-size:.9rem;animation:drop .7s .12s var(
 @keyframes drop{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
 
 /* زرار الأدمن فوق على الشمال */
-.adminBtn{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.16);backdrop-filter:blur(6px);color:#fff;font:inherit;font-size:.85rem;font-weight:600;padding:8px 14px;border-radius:99px;cursor:pointer;overflow:hidden;transition:transform .25s var(--ease),background .25s}
-.adminBtn:hover{background:rgba(255,255,255,.28);transform:translateY(-2px)}
+.adminBtn{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.16);color:#fff;font:inherit;font-size:.85rem;font-weight:600;padding:8px 14px;border-radius:99px;cursor:pointer;overflow:hidden;z-index:10;transition:transform .15s var(--ease)}
 .adminBtn:active{transform:scale(.94)}
 .adminBtn.on{background:#fff;color:var(--p1)}
-.adminBtn svg{width:16px;height:16px;fill:currentColor;transition:transform .5s var(--ease)}
-.adminBtn:hover svg{transform:rotate(90deg)}
+.adminBtn svg{width:16px;height:16px;fill:currentColor}
 
 main{max-width:720px;margin:-36px auto 40px;padding:0 14px}
 
@@ -98,8 +97,8 @@ input[type=password],input[type=text],input[type=date],input[type=file]{width:10
 input:focus{outline:none;border-color:var(--p1);box-shadow:0 0 0 4px rgba(109,63,192,.14)}
 label.lbl{display:block;font-size:.85rem;color:var(--mut);margin:4px 2px 6px}
 .pwWrap{position:relative}
-.pwWrap input{padding-inline-end:46px}
-.eye{position:absolute;inset-inline-end:6px;top:5px;width:38px;height:38px;border:0;background:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mut);transition:transform .2s,color .2s,background .2s}
+.pwWrap input{padding-right:46px}
+.eye{position:absolute;right:6px;left:auto;top:5px;width:38px;height:38px;border:0;background:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mut);transition:transform .2s,color .2s,background .2s}
 .eye:hover{color:var(--p1);background:#f1e8fb}
 .eye:active{transform:scale(.85)}
 .eye svg{width:20px;height:20px;fill:currentColor}
@@ -183,7 +182,11 @@ button:focus-visible,a:focus-visible{outline:3px solid rgba(214,69,143,.5);outli
 <script>
 /* ============ الإعدادات ============ */
 const SPREADSHEET_ID = "1ziPq8DvCJkDaVfAFP9chlyUlyuhl_i-way2lyb2eev8";
-const SHEET_NAMES = ["أسرة القديسة بربتوا", "أسرة القديسة أناسطاسية"];
+// gid = الرقم اللي في آخر لينك كل شيت (بعد gid=) — بيخلي الأرقام المكتوبة بـ / تظهر صح
+const SHEETS = [
+  { name: "أسرة القديسة بربتوا",    gid: "" },
+  { name: "أسرة القديسة أناسطاسية", gid: "" },
+];
 /* =================================== */
 
 const $=id=>document.getElementById(id);
@@ -260,13 +263,40 @@ document.addEventListener('pointerdown',e=>{
   b.appendChild(d);setTimeout(()=>d.remove(),600);
 });
 
+let fullWb=null,fullTried=false;
+async function getFullWorkbook(){
+  if(!fullTried){
+    fullTried=true;
+    try{const r=await fetch('/api/roster?all=1');if(r.ok)fullWb=XLSX.read(await r.arrayBuffer(),{type:'array'})}catch(e){}
+  }
+  return fullWb;
+}
+function sheetRows(ws){
+  if(!ws||!ws['!ref'])return [];
+  const rg=XLSX.utils.decode_range(ws['!ref']);rg.s.c=0;rg.s.r=0;ws['!ref']=XLSX.utils.encode_range(rg);
+  return XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+}
 async function loadRoster(){
   let all=[];
-  for(const name of SHEET_NAMES){
-    const url=`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
-    const r=await fetch(url);if(!r.ok)throw new Error('تعذّر فتح الشيت: '+name);
-    const wb=XLSX.read(await r.text(),{type:'string'});
-    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
+  for(const {name,gid} of SHEETS){
+    let rows;
+    if(gid){ // لو الـ gid مكتوب بنقرا الشيت CSV خام من السيرفر
+      const r=await fetch(`/api/roster?gid=${encodeURIComponent(gid)}`);if(!r.ok)throw new Error('تعذّر فتح الشيت: '+name);
+      const wb=XLSX.read(await r.text(),{type:'string'});
+      rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
+    }else{
+      const full=await getFullWorkbook(); // الملف كله من السيرفر: كل خلية بنصها الحقيقي من غير ما جوجل يخمّن نوع العمود
+      if(full){
+        const sn=full.SheetNames.find(n=>n.trim()===name.trim());
+        if(!sn)throw new Error('مش لاقي الشيت: '+name);
+        rows=sheetRows(full.Sheets[sn]);
+      }else{ // الطريقة القديمة لو السيرفر مش شغال
+        const r=await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`);
+        if(!r.ok)throw new Error('تعذّر فتح الشيت: '+name);
+        const wb=XLSX.read(await r.text(),{type:'string'});
+        rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
+      }
+    }
     let g='';
     let pi=(rows[0]||[]).findIndex(c=>/(^|\s)الام(\s|$)/.test(norm(c)));
     if(pi<0)pi=8; // عمود I
