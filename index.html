@@ -2,59 +2,191 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<title>الحضور والغياب</title>
+<title>افتقاد التليفون</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext x=%2250%22 y=%2282%22 font-size=%2285%22 text-anchor=%22middle%22%3E✝️%3C/text%3E%3C/svg%3E">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-:root{--p1:#6d3fc0;--p2:#d6458f;--bg:#f6f1fb;--fg:#2b2236;--card:#fff;--bd:#eadff5;--mut:#85779a;--no:#d6335a;--ok:#1f9d6b}
-*{box-sizing:border-box}
+:root{--p1:#6d3fc0;--p2:#d6458f;--bg:#f6f1fb;--fg:#2b2236;--card:#fff;--bd:#eadff5;--mut:#85779a;--no:#d6335a;--ok:#1f9d6b;--ease:cubic-bezier(.22,1,.36,1)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,"Segoe UI",Tahoma,sans-serif}
-header{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;padding:26px 16px 56px;text-align:center}
-header h1{margin:0;font-size:1.5rem}header p{margin:6px 0 0;opacity:.85;font-size:.9rem}
-main{max-width:720px;margin:-34px auto 40px;padding:0 14px}
-.tabs{display:flex;background:var(--card);border-radius:16px;padding:5px;box-shadow:0 6px 20px rgba(109,63,192,.15);margin-bottom:16px}
-.tabs button{flex:1;border:0;background:none;padding:12px;border-radius:12px;font:inherit;font-weight:600;color:var(--mut);cursor:pointer}
-.tabs button.on{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff}
+
+/* ===== Header ===== */
+header{position:relative;background:linear-gradient(120deg,var(--p1),var(--p2),var(--p1));background-size:200% 200%;animation:flow 14s ease infinite;color:#fff;padding:26px 16px 60px;text-align:center}
+header h1{margin:0;font-size:1.55rem;animation:drop .7s var(--ease) both}
+header p{margin:6px 0 0;opacity:.85;font-size:.9rem;animation:drop .7s .12s var(--ease) both}
+@keyframes flow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes drop{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+
+/* زرار الأدمن فوق على الشمال */
+.adminBtn{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.16);color:#fff;font:inherit;font-size:.85rem;font-weight:600;padding:8px 14px;border-radius:99px;cursor:pointer;overflow:hidden;z-index:10;transition:transform .15s var(--ease)}
+.adminBtn:active{transform:scale(.94)}
+.adminBtn.on{background:#fff;color:var(--p1)}
+.adminBtn svg{width:16px;height:16px;fill:currentColor}
+
+main{max-width:720px;margin:-36px auto 40px;padding:0 14px}
+
+/* ===== Tabs ===== */
+.tabs{position:relative;display:flex;background:var(--card);border-radius:16px;padding:5px;box-shadow:0 6px 20px rgba(109,63,192,.15);margin-bottom:16px}
+.tabs button{position:relative;z-index:1;flex:1;border:0;background:none;padding:12px;border-radius:12px;font:inherit;font-weight:600;color:var(--mut);cursor:pointer;overflow:hidden;transition:color .3s,transform .2s}
+.tabs button:active{transform:scale(.96)}
+.tabs button.on{color:#fff}
+.tabs .pill{position:absolute;z-index:0;top:5px;bottom:5px;width:calc(50% - 5px);inset-inline-start:5px;border-radius:12px;background:linear-gradient(135deg,var(--p1),var(--p2));box-shadow:0 4px 12px rgba(214,69,143,.35);transition:transform .45s var(--ease),opacity .25s}
+.tabs.off .pill{opacity:0}
+.tabs.off button{color:var(--mut)}
+/* RTL: inline-start = يمين، فالتاب التاني بيتحرك شمال */
+.tabs .pill.p1{transform:translateX(calc(-100% - 0px))}
+
+/* ===== Cards / Views ===== */
+.view{animation:viewIn .45s var(--ease) both}
+@keyframes viewIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(109,63,192,.06)}
 .card h2{font-size:1.05rem;margin:0 0 12px;color:var(--p1)}
-.grp{display:flex;justify-content:space-between;align-items:center;width:100%;border:1px solid var(--bd);background:var(--card);border-radius:14px;padding:15px 16px;margin-bottom:6px;font:inherit;font-weight:600;color:var(--fg);cursor:pointer;border-inline-start:6px solid var(--p1)}
+
+.dateTitle{color:#2b2236;padding:18px 14px;margin-bottom:14px;text-align:center;font-size:1.4rem;font-weight:800;}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+
+.grp{position:relative;display:flex;justify-content:space-between;align-items:center;width:100%;border:1px solid var(--bd);background:var(--card);border-radius:14px;padding:15px 16px;margin-bottom:6px;font:inherit;font-weight:600;color:var(--fg);cursor:pointer;border-inline-start:6px solid var(--p1);overflow:hidden;transition:transform .25s var(--ease),box-shadow .25s,background .25s}
+.grp:hover{transform:translateX(-4px);box-shadow:0 6px 16px rgba(109,63,192,.14)}
+.grp:active{transform:scale(.98)}
 .grp.open{background:#f1e8fb}
-.badge{background:var(--no);color:#fff;border-radius:99px;padding:2px 12px;font-size:.85rem}
+.grp .chev{display:inline-block;margin-inline-start:8px;transition:transform .35s var(--ease);color:var(--mut)}
+.grp.open .chev{transform:rotate(180deg)}
+.grp .left{display:flex;align-items:center;gap:8px}
+.badge{background:var(--no);color:#fff;border-radius:99px;padding:2px 12px;font-size:.85rem;min-width:30px;text-align:center}
 .badge.z{background:var(--ok)}
-.list{background:#fff;border:1px solid var(--bd);border-radius:14px;margin:0 6px 12px;overflow:hidden}
-.girl{padding:11px 14px;border-bottom:1px solid var(--bd)}
+.badge.n{background:var(--p1)}
+.grp.open .badge{animation:bump .4s var(--ease)}
+@keyframes bump{50%{transform:scale(1.25)}}
+
+.list{background:#fff;border:1px solid var(--bd);border-radius:14px;margin:0 6px 12px;overflow:hidden;animation:openList .4s var(--ease) both;transform-origin:top}
+@keyframes openList{from{opacity:0;transform:scaleY(.85) translateY(-8px)}to{opacity:1;transform:none}}
+.girl{padding:11px 14px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:10px;animation:rowIn .4s var(--ease) both;animation-delay:calc(var(--i,0) * 35ms);transition:background .2s}
+.girl:hover{background:#faf6fe}
 .girl:last-child{border:0}
-input[type=password],input[type=file]{width:100%;padding:12px;border:1px solid var(--bd);border-radius:12px;font:inherit;margin-bottom:10px;background:#fcfaff}
-.ok{width:100%;border:0;padding:13px;border-radius:12px;font:inherit;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--p1),var(--p2));cursor:pointer}
-.ok:disabled{opacity:.6}
-.mut{color:var(--mut);font-size:.88rem}.bad{color:var(--no)}.good{color:var(--ok)}
-.girl{display:flex;justify-content:space-between;align-items:center;gap:10px}
+@keyframes rowIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+
 .acts{display:flex;gap:8px;flex-shrink:0}
-.acts a{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.acts a,.acts button{border:0;padding:0;cursor:pointer;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;transition:transform .25s var(--ease),box-shadow .25s}
+.acts a:hover,.acts button:hover{transform:translateY(-3px) scale(1.1);box-shadow:0 6px 14px rgba(0,0,0,.2)}
+.acts a:active,.acts button:active{transform:scale(.88)}
+
+/* ===== بالون الأرقام ===== */
+.pop{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(43,34,54,.5);backdrop-filter:blur(3px);animation:fade .25s ease both}
+.pop[hidden]{display:none}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet{position:relative;width:min(92vw,360px);background:#fff;border-radius:22px;padding:20px 16px 16px;box-shadow:0 20px 50px rgba(43,34,54,.35);animation:bubble .45s var(--ease) both}
+@keyframes bubble{from{opacity:0;transform:translateY(24px) scale(.88)}to{opacity:1;transform:none}}
+.sheet h3{margin:0 34px 2px 0;font-size:1.05rem;color:var(--p1)}
+.sheet p{margin:0 0 12px;font-size:.85rem;color:var(--mut)}
+.sheet .x{position:absolute;top:10px;inset-inline-start:10px;width:32px;height:32px;border:0;border-radius:50%;background:#f1e8fb;color:var(--p1);font-size:.95rem;cursor:pointer;transition:transform .2s,background .2s}
+.sheet .x:hover{background:#e6d6f7;transform:rotate(90deg)}
+.prow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--bd);border-radius:14px;text-decoration:none;color:var(--fg);transition:transform .25s var(--ease),box-shadow .25s,background .2s}
+.prow:hover{transform:translateX(-4px);background:#faf6fe;box-shadow:0 6px 14px rgba(109,63,192,.12)}
+.prow:active{transform:scale(.97)}
+.pinfo{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pinfo b{font-size:.85rem;color:var(--p1)}
+.pnum{font-size:1.05rem;font-weight:600;letter-spacing:.5px;text-align:right}
+.pico{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pico svg{width:18px;height:18px;fill:#fff}
+.prow.call .pico{background:var(--p1)}.prow.wa .pico{background:#25d366}
 .acts svg{width:18px;height:18px;fill:#fff}
 .acts .call{background:var(--p1)}.acts .wa{background:#25d366}
+
+/* ===== Admin form ===== */
+input[type=password],input[type=text],input[type=date],input[type=file]{width:100%;padding:12px;border:1px solid var(--bd);border-radius:12px;font:inherit;margin-bottom:10px;background:#fcfaff;transition:border-color .2s,box-shadow .2s}
+input:focus{outline:none;border-color:var(--p1);box-shadow:0 0 0 4px rgba(109,63,192,.14)}
+label.lbl{display:block;font-size:.85rem;color:var(--mut);margin:4px 2px 6px}
+.pwWrap{position:relative}
+.pwWrap input{padding-right:46px}
+.eye{position:absolute;right:6px;left:auto;top:5px;width:38px;height:38px;border:0;background:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mut);transition:transform .2s,color .2s,background .2s}
+.eye:hover{color:var(--p1);background:#f1e8fb}
+.eye:active{transform:scale(.85)}
+.eye svg{width:20px;height:20px;fill:currentColor}
+.eye .slash{display:none}
+.eye.show .slash{display:block}
+.eye.show .open{display:none}
+
+.ok{position:relative;overflow:hidden;width:100%;border:0;padding:13px;border-radius:12px;font:inherit;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--p1),var(--p2));cursor:pointer;transition:transform .25s var(--ease),box-shadow .25s}
+.ok:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(214,69,143,.35)}
+.ok:active{transform:scale(.97)}
+.ok:disabled{opacity:.6;transform:none;box-shadow:none;cursor:wait}
+
+.mut{color:var(--mut);font-size:.88rem}.bad{color:var(--no)}.good{color:var(--ok)}
+.msg{animation:pop .4s var(--ease) both}
+
+/* ripple */
+.rip{position:absolute;border-radius:50%;background:rgba(255,255,255,.55);transform:scale(0);animation:ripple .6s linear;pointer-events:none}
+.grp .rip{background:rgba(109,63,192,.18)}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+
+button:focus-visible,a:focus-visible{outline:3px solid rgba(214,69,143,.5);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<header><h1>📋 الحضور والغياب</h1><p>أسرة القديسة بربتوا · أسرة القديسة أناسطاسية</p></header>
+<header>
+  <button class="adminBtn" id="tA" type="button">
+    <svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z"/></svg>
+    <span>الأدمن</span>
+  </button>
+  <h1>📞 افتقاد التليفون</h1>
+  <p>أسرة القديسة بربتوا · أسرة القديسة أناسطاسية</p>
+</header>
+
 <main>
-<div class="tabs"><button id="tV" class="on">الغياب</button><button id="tA">الأدمن</button></div>
+<div class="tabs" id="tabs">
+  <span class="pill" id="pill"></span>
+  <button id="tV" class="on" type="button">الغياب</button>
+  <button id="tG" type="button">مجموعات</button>
+</div>
 
-<section id="vV"><div id="viewer" class="mut">جاري التحميل…</div></section>
+<!-- الغياب -->
+<section id="vV" class="view"><div id="viewer" class="mut">جاري التحميل…</div></section>
 
-<section id="vA" style="display:none" class="card">
+<!-- مجموعات -->
+<section id="vG" class="view" style="display:none"><div id="groupsBox" class="mut">جاري التحميل…</div></section>
+
+<!-- الأدمن -->
+<section id="vA" class="view card" style="display:none">
   <h2>رفع شيت الحضور</h2>
-  <input id="pw" type="password" placeholder="باسورد الأدمن" dir="ltr">
+
+  <div class="pwWrap">
+    <input id="pw" type="password" placeholder="باسورد الأدمن" dir="ltr" autocomplete="off">
+    <button class="eye" id="eye" type="button" aria-label="اظهار / اخفاء الباسورد">
+      <svg class="open" viewBox="0 0 24 24"><path d="M12 5C7 5 2.73 8.11 1 12.5 2.73 16.89 7 20 12 20s9.27-3.11 11-7.5C21.27 8.11 17 5 12 5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
+      <svg class="slash" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5c0 .65-.13 1.26-.36 1.83l2.92 2.92A11.8 11.8 0 0 0 23 12.5C21.27 8.11 17 5 12 5c-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46A11.8 11.8 0 0 0 1 12.5C2.73 16.89 7 20 12 20c1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55A2.8 2.8 0 0 0 9 12a3 3 0 0 0 3 3c.22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53a5 5 0 0 1-5-5c0-.79.2-1.53.53-2.2z"/></svg>
+    </button>
+  </div>
+
+  <label class="lbl" for="aDate">تاريخ شيت الحضور</label>
+  <input type="date" id="aDate">
+
+  <label class="lbl" for="aFile">ملف الحضور</label>
   <input type="file" id="aFile" accept=".xlsx,.xls,.csv">
-  <button class="ok" id="okBtn">OK ✔</button>
+
+  <button class="ok" id="okBtn" type="button">OK ✔</button>
   <div id="aMsg" style="margin-top:12px"></div>
 </section>
 </main>
+
+<div class="pop" id="pop" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="popT">
+    <button class="x" type="button" aria-label="اغلاق">✕</button>
+    <h3 id="popT"></h3>
+    <p id="popM"></p>
+    <div id="popL"></div>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* ============ الإعدادات ============ */
 const SPREADSHEET_ID = "1ziPq8DvCJkDaVfAFP9chlyUlyuhl_i-way2lyb2eev8";
-const SHEET_NAMES = ["أسرة القديسة بربتوا", "أسرة القديسة أناسطاسية"];
+// gid = الرقم اللي في آخر لينك كل شيت (بعد gid=) — بيخلي الأرقام المكتوبة بـ / تظهر صح
+const SHEETS = [
+  { name: "أسرة القديسة بربتوا",    gid: "" },
+  { name: "أسرة القديسة أناسطاسية", gid: "" },
+];
 /* =================================== */
 
 const $=id=>document.getElementById(id);
@@ -63,36 +195,123 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const isName=s=>{const t=String(s||'').trim();return !!t&&/\p{L}/u.test(t)&&!/^[\d\s.+\-\/]+$/.test(t)&&!/^(total|name|الاسم|اسم|المجموع|الاجمالي)$/i.test(t)};
 // نفس الاسم، أو اسم مختصر (3 كلمات على الأقل) هو بداية الاسم الكامل
 const same=(a,b)=>{if(a===b)return true;const x=a.split(' '),y=b.split(' ');const s=x.length<y.length?x:y,l=x.length<y.length?y:x;return s.length>=3&&s.every((w,i)=>w===l[i])};
-const phoneOf=raw=>{
-  const s=String(raw||'').replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c));
-  const part=s.split(/[,;\/\n،]|\s{2,}/).map(x=>x.replace(/\D/g,'')).find(x=>x.length>=9);
-  if(!part)return null;
-  let d=part;
-  if(d.startsWith('00'))d=d.slice(2);
-  else if(d.startsWith('0'))d='20'+d.slice(1);
-  else if(d.length===10&&d.startsWith('1'))d='20'+d;
+const intl=d=>{
+  if(d.startsWith('00'))return d.slice(2);
+  if(d.startsWith('0'))return '20'+d.slice(1);
+  if(d.length===10&&d.startsWith('1'))return '20'+d;
   return d;
 };
+// بترجع [{num, label}] — الأرقام مفصولة بـ / أو سطر جديد أو "or"، واي كلام مكتوب جنب الرقم (أو في السطر اللي قبله) بيبقى الـ label
+const phonesOf=raw=>{
+  const s=String(raw||'').replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c));
+  const out=[];let pending='';
+  s.split(/[\/\n\r;,،]|\s+(?:or|أو)\s+/i).forEach(seg=>{
+    const digits=seg.replace(/\D/g,'');
+    const text=seg.replace(/[\d+()\-.:]/g,' ').replace(/\s+/g,' ').trim();
+    if(digits.length>=9){
+      const num=intl(digits);
+      if(!out.some(o=>o.num===num))out.push({num,label:text||pending});
+      pending='';
+    }else if(text)pending=text;
+  });
+  return out;
+};
+const MONTHS=['يناير','فبراير','مارس','ابريل','مايو','يونيو','يوليو','اغسطس','سبتمبر','اكتوبر','نوفمبر','ديسمبر'];
+// "2026-10-09" -> "9 اكتوبر 2026"
+const fmtDate=iso=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||'');if(!m)return '';return `${+m[3]} ${MONTHS[+m[2]-1]} ${m[1]}`};
+const todayISO=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+
 const ICON_CALL='<svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
 const ICON_WA='<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>';
-const acts=p=>p?`<span class="acts"><a class="call" href="tel:+${p}" title="اتصال">${ICON_CALL}</a><a class="wa" href="https://wa.me/${p}" target="_blank" rel="noopener" title="واتساب">${ICON_WA}</a></span>`:'<span class="mut">مفيش رقم</span>';
-let roster=[],att=null,openG=null;
+const acts=x=>{
+  const l=x.p||[];
+  if(!l.length)return '<span class="mut">مفيش رقم</span>';
+  // رقم واحد من غير أي كلام جنبه: اتصال / واتساب على طول
+  if(l.length===1&&!l[0].label){const p=l[0].num;return `<span class="acts"><a class="call" href="tel:+${p}" title="اتصال">${ICON_CALL}</a><a class="wa" href="https://wa.me/${p}" target="_blank" rel="noopener" title="واتساب">${ICON_WA}</a></span>`}
+  // أكتر من رقم أو في كلام مكتوب: بيفتح بالون فيه الأرقام
+  return `<span class="acts"><button class="call" type="button" data-id="${x.id}" data-m="call" title="اتصال">${ICON_CALL}</button><button class="wa" type="button" data-id="${x.id}" data-m="wa" title="واتساب">${ICON_WA}</button></span>`;
+};
 
+/* ===== بالون الأرقام ===== */
+function openPop(x,m){
+  $('popT').textContent=x.n;
+  $('popM').textContent=m==='call'?'اختار الرقم للاتصال':'اختار الرقم للواتساب';
+  $('popL').innerHTML=x.p.map(p=>{
+    const href=m==='call'?`tel:+${p.num}`:`https://wa.me/${p.num}`;
+    const loc=p.num.startsWith('20')?'0'+p.num.slice(2):p.num;
+    return `<a class="prow ${m}" href="${href}" ${m==='wa'?'target="_blank" rel="noopener"':''}><span class="pinfo">${p.label?`<b>${esc(p.label)}</b>`:''}<span class="pnum" dir="ltr">${esc(loc)}</span></span><span class="pico">${m==='call'?ICON_CALL:ICON_WA}</span></a>`;
+  }).join('');
+  $('pop').hidden=false;
+}
+function closePop(){$('pop').hidden=true}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.acts button');
+  if(b){openPop(roster[+b.dataset.id],b.dataset.m);return}
+  if(e.target.closest('#pop .x')||e.target===$('pop')||e.target.closest('#pop .prow'))closePop();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePop()});
+
+let roster=[],att=null,openG=null,openGroupTab=null,rosterReady=false;
+
+/* ===== تأثير الموجة عند الضغط ===== */
+document.addEventListener('pointerdown',e=>{
+  const b=e.target.closest('.ok,.grp,.tabs button,.adminBtn');
+  if(!b||b.disabled)return;
+  const r=b.getBoundingClientRect(),s=Math.max(r.width,r.height);
+  const d=document.createElement('span');d.className='rip';
+  d.style.cssText=`width:${s}px;height:${s}px;left:${e.clientX-r.left-s/2}px;top:${e.clientY-r.top-s/2}px`;
+  b.appendChild(d);setTimeout(()=>d.remove(),600);
+});
+
+let fullWb=null,fullTried=false;
+async function getFullWorkbook(){
+  if(!fullTried){
+    fullTried=true;
+    try{const r=await fetch('/api/roster?all=1');if(r.ok)fullWb=XLSX.read(await r.arrayBuffer(),{type:'array'})}catch(e){}
+  }
+  return fullWb;
+}
+function sheetRows(ws){
+  if(!ws||!ws['!ref'])return [];
+  const rg=XLSX.utils.decode_range(ws['!ref']);rg.s.c=0;rg.s.r=0;ws['!ref']=XLSX.utils.encode_range(rg);
+  return XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+}
 async function loadRoster(){
   let all=[];
-  for(const name of SHEET_NAMES){
-    const url=`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
-    const r=await fetch(url);if(!r.ok)throw new Error('تعذّر فتح الشيت: '+name);
-    const wb=XLSX.read(await r.text(),{type:'string'});
-    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
-        let g='';
+  for(const {name,gid} of SHEETS){
+    let rows;
+    if(gid){ // لو الـ gid مكتوب بنقرا الشيت CSV خام من السيرفر
+      const r=await fetch(`/api/roster?gid=${encodeURIComponent(gid)}`);if(!r.ok)throw new Error('تعذّر فتح الشيت: '+name);
+      const wb=XLSX.read(await r.text(),{type:'string'});
+      rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
+    }else{
+      const full=await getFullWorkbook(); // الملف كله من السيرفر: كل خلية بنصها الحقيقي من غير ما جوجل يخمّن نوع العمود
+      if(full){
+        const sn=full.SheetNames.find(n=>n.trim()===name.trim());
+        if(!sn)throw new Error('مش لاقي الشيت: '+name);
+        rows=sheetRows(full.Sheets[sn]);
+      }else{ // الطريقة القديمة لو السيرفر مش شغال
+        const r=await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`);
+        if(!r.ok)throw new Error('تعذّر فتح الشيت: '+name);
+        const wb=XLSX.read(await r.text(),{type:'string'});
+        rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
+      }
+    }
+    let g='';
     let pi=(rows[0]||[]).findIndex(c=>/(^|\s)الام(\s|$)/.test(norm(c)));
     if(pi<0)pi=8; // عمود I
     rows.forEach((row,i)=>{
       if(i===0)return;
-      const a=String(row[0]||'').trim();if(a)g=a;
+      const a=String(row[0]||'').trim();
+      if(a){
+        if(/^(ال)?تاسون[يى]$/.test(norm(a))){g='';return} // عنوان عمود "تاسوني" مش اسم تاسوني
+        g=a;
+      }
       const cells=row.slice(1).map(x=>String(x||'').trim()).filter(x=>x);
-      if(g&&cells.length&&isName(cells[0]))all.push({g,n:cells[0],p:phoneOf(row[pi])});
+      if(!(g&&cells.length&&isName(cells[0])))return;
+      const ph=phonesOf(row[pi]);
+      if(!ph.length){const w=cells[0].split(/\s+/).length;if(w<3||/[-–—]/.test(cells[0]))return} // من غير رقم: لو الاسم أقل من 3 كلمات أو فيه "-" يبقى عنوان فرعي (كامب شيزار / المدرسة / جامعة - أزاريطة) مش اسم بنت
+      all.push({g,n:cells[0],p:ph});
     });
   }
   return all;
@@ -114,51 +333,101 @@ function parseAtt(rows){
   return [...map.values()];
 }
 
+/* ===== الأدمن: رفع الشيت ===== */
 $('okBtn').onclick=async()=>{
-  const f=$('aFile').files[0],m=$('aMsg'),b=$('okBtn');
-  if(!f){m.innerHTML='<span class="bad">اختار الملف الأول</span>';return}
-  if(!$('pw').value){m.innerHTML='<span class="bad">اكتب الباسورد</span>';return}
+  const f=$('aFile').files[0],m=$('aMsg'),b=$('okBtn'),date=$('aDate').value;
+  if(!$('pw').value){m.innerHTML='<span class="bad msg">اكتب الباسورد</span>';return}
+  if(!date){m.innerHTML='<span class="bad msg">اختار تاريخ الشيت</span>';return}
+  if(!f){m.innerHTML='<span class="bad msg">اختار الملف الأول</span>';return}
   b.disabled=true;m.textContent='جاري الحفظ…';
   try{
     const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
     const rows=parseAtt(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false}));
     if(!rows.length)throw new Error('مفيش صفوف (Yes)/(No) في الملف — اتأكد من عمود Attendance');
-    const r=await fetch('/api/attendance',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:$('pw').value,rows})});
+    const r=await fetch('/api/attendance',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:$('pw').value,rows,date})});
     if(r.status===401)throw new Error('الباسورد غلط');
     if(!r.ok)throw new Error(await r.text()||'حصل خطأ');
     const rk=roster.map(x=>norm(x.n));
     const unm=rows.filter(x=>{const k=norm(x.n);return !rk.some(y=>same(y,k))});
-    m.innerHTML=`<span class="good">✔ تم الحفظ — Yes: ${rows.filter(x=>!x.no).length} · No: ${rows.filter(x=>x.no).length}</span>`+(unm.length?`<p class="mut">أسماء في شيت الحضور مش موجودة في شيت الأسماء (${unm.length}): ${unm.map(x=>esc(x.n)).join('، ')}</p>`:'');
+    m.innerHTML=`<span class="good msg">✔ تم الحفظ — Yes: ${rows.filter(x=>!x.no).length} · No: ${rows.filter(x=>x.no).length}</span>`+(unm.length?`<p class="mut">أسماء في شيت الحضور مش موجودة في شيت الأسماء (${unm.length}): ${unm.map(x=>esc(x.n)).join('، ')}</p>`:'');
     await loadAtt();
-  }catch(e){m.innerHTML='<span class="bad">فشل الحفظ: '+esc(e.message)+'</span>'}
+  }catch(e){m.innerHTML='<span class="bad msg">فشل الحفظ: '+esc(e.message)+'</span>'}
   b.disabled=false;
 };
 
-function render(){
+/* ===== اظهار / اخفاء الباسورد ===== */
+$('eye').onclick=()=>{
+  const p=$('pw'),show=p.type==='password';
+  p.type=show?'text':'password';
+  $('eye').classList.toggle('show',show);
+};
+
+/* ===== تبويب الغياب ===== */
+function renderAbs(){
   const v=$('viewer');
-  if(!roster.length){return}
+  if(!rosterReady)return;
   const A=((att&&att.rows)||[]).map(r=>({k:norm(r.n),no:r.no}));
   const st=n=>{const k=norm(n);const e=A.find(a=>same(a.k,k));return e?e.no:null};
   const groups={};roster.forEach(x=>(groups[x.g]=groups[x.g]||[]).push(x));
-  let h=att?`<p class="mut">آخر تحديث للحضور: ${new Date(att.at).toLocaleString('ar-EG')}</p>`:'<p class="mut">لسه مفيش شيت حضور اترفع.</p>';
+  let h='';
+  if(att){
+    let d=fmtDate(att.date),guess=false;
+    if(!d){const t=new Date(att.at);d=fmtDate(`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`);guess=true}
+    h+=`<div class="dateTitle">غياب يوم ${esc(d)}</div>`;
+    if(guess)h+='<p class="mut" style="margin-top:-4px">التاريخ ده تاريخ الرفع — ارفع الشيت تاني واختار التاريخ من الأدمن.</p>';
+    h+=`<p class="mut">آخر تحديث للحضور: ${new Date(att.at).toLocaleString('ar-EG')}</p>`;
+  }else h+='<p class="mut">لسه مفيش شيت حضور اترفع.</p>';
   Object.keys(groups).forEach(g=>{
     const sts=groups[g].map(x=>st(x.n));
     if(att&&!sts.some(s=>s!==null))return;
     const miss=groups[g].filter((x,i)=>sts[i]===true);
-    h+=`<button class="grp ${openG===g?'open':''}" data-g="${esc(g)}"><span>${esc(g)}</span><span class="badge ${miss.length?'':'z'}">${miss.length}</span></button>`;
-    if(openG===g)h+=`<div class="list">${miss.length?miss.map(x=>`<div class="girl"><span>❌ ${esc(x.n)}</span>${acts(x.p)}</div>`).join(''):'<div class="girl good">كلهم حاضرين ✔</div>'}</div>`;
+    h+=`<button class="grp ${openG===g?'open':''}" data-g="${esc(g)}"><span>${esc(g)}</span><span class="left"><span class="badge ${miss.length?'':'z'}">${miss.length}</span><span class="chev">▾</span></span></button>`;
+    if(openG===g)h+=`<div class="list">${miss.length?miss.map((x,i)=>`<div class="girl" style="--i:${i}"><span>❌ ${esc(x.n)}</span>${acts(x)}</div>`).join(''):'<div class="girl good">كلهم حاضرين ✔</div>'}</div>`;
   });
-  v.innerHTML=h;
-  v.querySelectorAll('.grp').forEach(b=>b.onclick=()=>{openG=openG===b.dataset.g?null:b.dataset.g;render()});
+  v.className='';v.innerHTML=h;
+  v.querySelectorAll('.grp').forEach(b=>b.onclick=()=>{openG=openG===b.dataset.g?null:b.dataset.g;renderAbs()});
 }
 
-function tab(a){$('vA').style.display=a?'':'none';$('vV').style.display=a?'none':'';$('tA').classList.toggle('on',a);$('tV').classList.toggle('on',!a)}
-$('tV').onclick=()=>tab(false);$('tA').onclick=()=>tab(true);
+/* ===== تبويب مجموعات ===== */
+function renderGroups(){
+  const box=$('groupsBox');
+  if(!rosterReady)return;
+  const groups={};roster.forEach(x=>(groups[x.g]=groups[x.g]||[]).push(x));
+  let h='';
+  Object.keys(groups).forEach(g=>{
+    const list=groups[g];
+    h+=`<button class="grp ${openGroupTab===g?'open':''}" data-g="${esc(g)}"><span>${esc(g)}</span><span class="left"><span class="badge n">${list.length}</span><span class="chev">▾</span></span></button>`;
+    if(openGroupTab===g)h+=`<div class="list">${list.map((x,i)=>`<div class="girl" style="--i:${i}"><span>${esc(x.n)}</span>${acts(x)}</div>`).join('')}</div>`;
+  });
+  box.className='';box.innerHTML=h||'<p class="mut">مفيش مجموعات في الشيت.</p>';
+  box.querySelectorAll('.grp').forEach(b=>b.onclick=()=>{openGroupTab=openGroupTab===b.dataset.g?null:b.dataset.g;renderGroups()});
+}
 
-async function loadAtt(){try{const r=await fetch('/api/attendance');att=await r.json();render()}catch(e){}}
+/* ===== التنقل بين التابات ===== */
+function show(which){ // 'V' | 'G' | 'A'
+  ['V','G','A'].forEach(k=>{
+    const el=$('v'+k);const on=k===which;
+    if(on&&el.style.display==='none'){el.style.display='';el.style.animation='none';el.offsetWidth;el.style.animation=''}
+    else if(!on)el.style.display='none';
+  });
+  $('tV').classList.toggle('on',which==='V');
+  $('tG').classList.toggle('on',which==='G');
+  $('tA').classList.toggle('on',which==='A');
+  $('tabs').classList.toggle('off',which==='A');
+  $('pill').classList.toggle('p1',which==='G');
+  if(which!=='A')lastTab=which;
+}
+let lastTab='V';
+$('tV').onclick=()=>show('V');
+$('tG').onclick=()=>show('G');
+$('tA').onclick=()=>show($('vA').style.display==='none'?'A':lastTab);
+
+async function loadAtt(){try{const r=await fetch('/api/attendance');att=await r.json();renderAbs()}catch(e){}}
+
+$('aDate').value=todayISO();
 (async()=>{
-  try{roster=await loadRoster();render()}
-  catch(e){$('viewer').innerHTML='<span class="bad">'+esc(e.message)+'<br>اتأكد إن الشيت Share ▸ Anyone with the link ▸ Viewer وإن SPREADSHEET_ID صح.</span>'}
+  try{roster=await loadRoster();roster.forEach((x,i)=>x.id=i);rosterReady=true;renderAbs();renderGroups()}
+  catch(e){const msg='<span class="bad">'+esc(e.message)+'<br>اتأكد إن الشيت Share ▸ Anyone with the link ▸ Viewer وإن SPREADSHEET_ID صح.</span>';$('viewer').innerHTML=msg;$('groupsBox').innerHTML=msg}
   loadAtt();
 })();
 </script>
