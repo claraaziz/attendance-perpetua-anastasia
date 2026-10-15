@@ -88,6 +88,18 @@ main{max-width:720px;margin:-36px auto 40px;padding:0 14px}
 .smallBtn:hover{background:#f1e8fb}
 .smallBtn:active{transform:scale(.93)}
 
+.dateRow{display:flex;align-items:center;gap:10px;padding:10px 14px}
+.colHead{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:none;padding:0;font:inherit;font-size:1.05rem;font-weight:700;color:var(--p1);cursor:pointer;text-align:start}
+.colHead .left{display:flex;align-items:center;gap:8px}
+.colHead .chev{color:var(--mut);transition:transform .35s var(--ease)}
+.colHead.open .chev{transform:rotate(180deg)}
+.colBody{margin-top:10px}
+.colBody.shut{display:none}
+.colBody.anim{animation:openList .35s var(--ease) both}
+.cfBtns{display:flex;gap:10px;margin-top:16px}
+.cfBtns .ok{flex:1}
+.cfBtns .smallBtn{flex:1;padding:13px;border-radius:12px;font-size:.95rem}
+
 /* ===== بالون الأرقام ===== */
 .pop{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(43,34,54,.5);backdrop-filter:blur(3px);animation:fade .25s ease both}
 .pop[hidden]{display:none}
@@ -168,14 +180,16 @@ button:focus-visible,a:focus-visible{outline:3px solid rgba(214,69,143,.5);outli
 <!-- تسميع المزمور -->
 <section id="vP" class="view" style="display:none">
   <div class="searchWrap"><input id="psalmSearch" type="text" placeholder="ابحث عن اسم…" autocomplete="off"></div>
-  <div class="card">
-    <h2 class="ptitle"><span>لسه ما سمّعوش</span><span class="badge n" id="pcTodo">0</span></h2>
-    <div id="psalmTodo" class="mut">جاري التحميل…</div>
+  <div class="card dateRow">
+    <label class="lbl" for="psalmDate" style="margin:0;white-space:nowrap">يوم التسميع</label>
+    <input type="date" id="psalmDate" style="margin:0">
   </div>
   <div class="card">
-    <h2 class="ptitle"><span>سمّعوا ✔</span><span><span class="badge z" id="pcDone">0</span> <button class="smallBtn" id="psalmReset" type="button">مسح الكل</button></span></h2>
-    <div id="psalmDone"></div>
+    <button type="button" class="colHead open" id="psalmTodoHead" data-col="todo"><span>لسه ما سمّعوش</span><span class="left"><span class="badge n" id="pcTodo">0</span><span class="chev">▾</span></span></button>
+    <div id="psalmTodo" class="colBody mut">جاري التحميل…</div>
   </div>
+  <div id="psalmDays"></div>
+  <div style="text-align:center;margin-bottom:12px"><button class="smallBtn" id="psalmReset" type="button">مسح كل العلامات</button></div>
 </section>
 
 <!-- الأدمن -->
@@ -200,6 +214,14 @@ button:focus-visible,a:focus-visible{outline:3px solid rgba(214,69,143,.5);outli
   <div id="aMsg" style="margin-top:12px"></div>
 </section>
 </main>
+
+<div class="pop" id="cf" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cfT">
+    <h3 id="cfT"></h3>
+    <p id="cfM" style="margin-top:6px;font-size:.95rem;color:var(--fg)"></p>
+    <div class="cfBtns"><button class="ok" id="cfYes" type="button">تأكيد</button><button class="smallBtn" id="cfNo" type="button">إلغاء</button></div>
+  </div>
+</div>
 
 <div class="pop" id="pop" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="popT">
@@ -422,9 +444,15 @@ function renderAbs(){
 
 /* ===== تبويب مجموعات ===== */
 /* ===== تبويب تسميع المزمور ===== */
-const psalmDone=new Set();
-try{JSON.parse(localStorage.getItem('psalmDone')||'[]').forEach(k=>psalmDone.add(k))}catch(e){}
-const savePsalm=()=>{try{localStorage.setItem('psalmDone',JSON.stringify([...psalmDone]))}catch(e){}};
+const psalmDone=new Map();   // مفتاح الاسم -> يوم التسميع (yyyy-mm-dd)
+const pOpen={};              // حالة فتح/قفل القوايم (الافتراضي: مفتوحة)
+try{
+  const v=JSON.parse(localStorage.getItem('psalmDone')||'{}');
+  if(Array.isArray(v))v.forEach(k=>psalmDone.set(k,todayISO())); // نسخة قديمة كانت بتحفظ الأسماء بس
+  else Object.entries(v).forEach(([k,d])=>psalmDone.set(k,d));
+}catch(e){}
+const savePsalm=()=>{try{localStorage.setItem('psalmDone',JSON.stringify(Object.fromEntries(psalmDone)))}catch(e){}};
+const isOpen=k=>pOpen[k]!==false;
 function psalmNames(){ // أسماء البنات بس (من غير عناوين ولا أسماء تاسوني)، من غير تكرار، مرتبة أبجدياً
   const m=new Map();
   roster.forEach(x=>{const k=norm(x.n);if(k&&!m.has(k))m.set(k,x.n)});
@@ -432,23 +460,56 @@ function psalmNames(){ // أسماء البنات بس (من غير عناوين
 }
 function renderPsalm(){
   if(!rosterReady)return;
-  const all=psalmNames(),q=norm($('psalmSearch').value),words=q?q.split(' '):[];
+  const all=psalmNames(),words=norm($('psalmSearch').value).split(' ').filter(Boolean);
   const row=(x,d)=>`<button type="button" class="pitem ${d?'done':''}" data-k="${esc(x.k)}"><span class="box"></span><span class="nm">${esc(x.n)}</span></button>`;
-  const todoAll=all.filter(x=>!psalmDone.has(x.k)),done=all.filter(x=>psalmDone.has(x.k));
+  const todoAll=all.filter(x=>!psalmDone.has(x.k));
   const todo=todoAll.filter(x=>words.every(w=>x.k.includes(w)));
-  $('pcTodo').textContent=todoAll.length;$('pcDone').textContent=done.length;
-  $('psalmTodo').className='';
+  $('pcTodo').textContent=todoAll.length;
+  $('psalmTodoHead').classList.toggle('open',isOpen('todo'));
+  $('psalmTodo').className='colBody'+(isOpen('todo')?'':' shut');
   $('psalmTodo').innerHTML=todo.length?todo.map(x=>row(x,false)).join(''):`<p class="mut">${todoAll.length?'مفيش نتايج للبحث':'كلهم سمّعوا ✔'}</p>`;
-  $('psalmDone').innerHTML=done.length?done.map(x=>row(x,true)).join(''):'<p class="mut">لسه محدش اتعلّم.</p>';
+  // قايمة لكل يوم
+  const byDay={};
+  all.forEach(x=>{const d=psalmDone.get(x.k);if(d)(byDay[d]=byDay[d]||[]).push(x)});
+  const days=Object.keys(byDay).sort().reverse();
+  $('psalmDays').innerHTML=days.length?days.map(d=>{
+    const key='day:'+d;
+    return `<div class="card"><button type="button" class="colHead ${isOpen(key)?'open':''}" data-col="${esc(key)}"><span>سمّعوا يوم ${esc(fmtDate(d)||d)} ✔</span><span class="left"><span class="badge z">${byDay[d].length}</span><span class="chev">▾</span></span></button><div class="colBody${isOpen(key)?'':' shut'}">${byDay[d].map(x=>row(x,true)).join('')}</div></div>`;
+  }).join(''):'<div class="card mut">لسه محدش اتعلّم.</div>';
 }
-function togglePsalm(e){
-  const b=e.target.closest('.pitem');if(!b)return;
-  const k=b.dataset.k;psalmDone.has(k)?psalmDone.delete(k):psalmDone.add(k);
-  savePsalm();renderPsalm();
+// تأكيد قبل أي تعليم / إلغاء تعليم
+let cfKey=null;
+function closeCf(){$('cf').hidden=true;cfKey=null}
+function askPsalm(k){
+  const x=psalmNames().find(n=>n.k===k);if(!x)return;
+  cfKey=k;const was=psalmDone.get(k);
+  const day=fmtDate(was||$('psalmDate').value||todayISO());
+  $('cfT').textContent=x.n;
+  $('cfM').textContent=was?`هي ما سمّعتش المزمور؟ هتتشال من قايمة يوم ${day}.`:`هي سمّعت المزمور فعلاً؟ هتتسجل في قايمة يوم ${day}.`;
+  $('cf').hidden=false;
 }
-$('psalmTodo').onclick=togglePsalm;$('psalmDone').onclick=togglePsalm;
+$('cfYes').onclick=()=>{
+  if(cfKey){psalmDone.has(cfKey)?psalmDone.delete(cfKey):psalmDone.set(cfKey,$('psalmDate').value||todayISO());savePsalm();renderPsalm()}
+  closeCf();
+};
+$('cfNo').onclick=closeCf;
+$('cf').onclick=e=>{if(e.target===$('cf'))closeCf()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCf()});
+// فتح/قفل القوايم + الضغط على اسم
+$('vP').addEventListener('click',e=>{
+  const h=e.target.closest('.colHead');
+  if(h){
+    const k=h.dataset.col,open=!isOpen(k);pOpen[k]=open;
+    h.classList.toggle('open',open);
+    const body=h.nextElementSibling;body.classList.toggle('shut',!open);
+    if(open){body.classList.remove('anim');body.offsetWidth;body.classList.add('anim')}
+    return;
+  }
+  const it=e.target.closest('.pitem');if(it)askPsalm(it.dataset.k);
+});
 $('psalmSearch').oninput=renderPsalm;
-$('psalmReset').onclick=()=>{if(psalmDone.size&&confirm('مسح كل العلامات؟')){psalmDone.clear();savePsalm();renderPsalm()}};
+$('psalmDate').value=todayISO();
+$('psalmReset').onclick=()=>{if(psalmDone.size&&confirm('مسح كل العلامات في كل الأيام؟')){psalmDone.clear();savePsalm();renderPsalm()}};
 
 function renderGroups(){
   const box=$('groupsBox');
