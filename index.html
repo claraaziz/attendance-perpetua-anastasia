@@ -27,14 +27,15 @@ main{max-width:720px;margin:-36px auto 40px;padding:0 14px}
 
 /* ===== Tabs ===== */
 .tabs{position:relative;display:flex;background:var(--card);border-radius:16px;padding:5px;box-shadow:0 6px 20px rgba(109,63,192,.15);margin-bottom:16px}
-.tabs button{position:relative;z-index:1;flex:1;border:0;background:none;padding:12px;border-radius:12px;font:inherit;font-weight:600;color:var(--mut);cursor:pointer;overflow:hidden;transition:color .3s,transform .2s}
+.tabs button{position:relative;z-index:1;flex:1;border:0;background:none;padding:12px 4px;border-radius:12px;font:inherit;font-size:.92rem;font-weight:600;color:var(--mut);cursor:pointer;overflow:hidden;transition:color .3s,transform .2s}
 .tabs button:active{transform:scale(.96)}
 .tabs button.on{color:#fff}
-.tabs .pill{position:absolute;z-index:0;top:5px;bottom:5px;width:calc(50% - 5px);inset-inline-start:5px;border-radius:12px;background:linear-gradient(135deg,var(--p1),var(--p2));box-shadow:0 4px 12px rgba(214,69,143,.35);transition:transform .45s var(--ease),opacity .25s}
+.tabs .pill{position:absolute;z-index:0;top:5px;bottom:5px;width:calc((100% - 10px)/3);inset-inline-start:5px;border-radius:12px;background:linear-gradient(135deg,var(--p1),var(--p2));box-shadow:0 4px 12px rgba(214,69,143,.35);transition:transform .45s var(--ease),opacity .25s}
 .tabs.off .pill{opacity:0}
 .tabs.off button{color:var(--mut)}
 /* RTL: inline-start = يمين، فالتاب التاني بيتحرك شمال */
-.tabs .pill.p1{transform:translateX(calc(-100% - 0px))}
+.tabs .pill.p1{transform:translateX(-100%)}
+.tabs .pill.p2{transform:translateX(-200%)}
 
 /* ===== Cards / Views ===== */
 .view{animation:viewIn .45s var(--ease) both}
@@ -42,7 +43,7 @@ main{max-width:720px;margin:-36px auto 40px;padding:0 14px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(109,63,192,.06)}
 .card h2{font-size:1.05rem;margin:0 0 12px;color:var(--p1)}
 
-.dateTitle{color:#2b2236;padding:18px 14px;margin-bottom:14px;text-align:center;font-size:1.4rem;font-weight:800;}
+.dateTitle{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;border-radius:16px;padding:18px 14px;margin-bottom:14px;text-align:center;font-size:1.4rem;font-weight:800;box-shadow:0 8px 22px rgba(214,69,143,.28);animation:pop .5s var(--ease) both}
 @keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
 
 .grp{position:relative;display:flex;justify-content:space-between;align-items:center;width:100%;border:1px solid var(--bd);background:var(--card);border-radius:14px;padding:15px 16px;margin-bottom:6px;font:inherit;font-weight:600;color:var(--fg);cursor:pointer;border-inline-start:6px solid var(--p1);overflow:hidden;transition:transform .25s var(--ease),box-shadow .25s,background .25s}
@@ -69,6 +70,23 @@ main{max-width:720px;margin:-36px auto 40px;padding:0 14px}
 .acts a,.acts button{border:0;padding:0;cursor:pointer;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;transition:transform .25s var(--ease),box-shadow .25s}
 .acts a:hover,.acts button:hover{transform:translateY(-3px) scale(1.1);box-shadow:0 6px 14px rgba(0,0,0,.2)}
 .acts a:active,.acts button:active{transform:scale(.88)}
+
+/* ===== تسميع المزمور ===== */
+.searchWrap{position:sticky;top:8px;z-index:4;margin-bottom:12px}
+.searchWrap input{margin:0;padding:13px 16px;border-radius:14px;box-shadow:0 6px 18px rgba(109,63,192,.14);background:#fff}
+.ptitle{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ptitle .badge{font-size:.85rem}
+.pitem{display:flex;align-items:center;gap:12px;width:100%;text-align:start;border:0;border-bottom:1px solid var(--bd);background:#fff;padding:12px 6px;font:inherit;color:var(--fg);cursor:pointer;transition:background .2s}
+.pitem:last-child{border-bottom:0}
+.pitem:hover{background:#faf6fe}
+.pitem .box{flex-shrink:0;width:24px;height:24px;border-radius:8px;border:2px solid #cdbbe6;background:#fff;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.95rem;font-weight:700;transition:background .2s,border-color .2s,transform .2s}
+.pitem:active .box{transform:scale(.85)}
+.pitem.done .box{background:linear-gradient(135deg,var(--p1),var(--p2));border-color:transparent}
+.pitem.done .nm{color:var(--mut)}
+.pitem.done .box::after{content:"✓"}
+.smallBtn{border:1px solid var(--bd);background:#fff;color:var(--p1);font:inherit;font-size:.8rem;font-weight:600;padding:6px 12px;border-radius:99px;cursor:pointer;transition:transform .15s,background .2s}
+.smallBtn:hover{background:#f1e8fb}
+.smallBtn:active{transform:scale(.93)}
 
 /* ===== بالون الأرقام ===== */
 .pop{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(43,34,54,.5);backdrop-filter:blur(3px);animation:fade .25s ease both}
@@ -138,6 +156,7 @@ button:focus-visible,a:focus-visible{outline:3px solid rgba(214,69,143,.5);outli
   <span class="pill" id="pill"></span>
   <button id="tV" class="on" type="button">الغياب</button>
   <button id="tG" type="button">مجموعات</button>
+  <button id="tP" type="button">تسميع المزمور</button>
 </div>
 
 <!-- الغياب -->
@@ -145,6 +164,19 @@ button:focus-visible,a:focus-visible{outline:3px solid rgba(214,69,143,.5);outli
 
 <!-- مجموعات -->
 <section id="vG" class="view" style="display:none"><div id="groupsBox" class="mut">جاري التحميل…</div></section>
+
+<!-- تسميع المزمور -->
+<section id="vP" class="view" style="display:none">
+  <div class="searchWrap"><input id="psalmSearch" type="text" placeholder="ابحث عن اسم…" autocomplete="off"></div>
+  <div class="card">
+    <h2 class="ptitle"><span>لسه ما سمّعوش</span><span class="badge n" id="pcTodo">0</span></h2>
+    <div id="psalmTodo" class="mut">جاري التحميل…</div>
+  </div>
+  <div class="card">
+    <h2 class="ptitle"><span>سمّعوا ✔</span><span><span class="badge z" id="pcDone">0</span> <button class="smallBtn" id="psalmReset" type="button">مسح الكل</button></span></h2>
+    <div id="psalmDone"></div>
+  </div>
+</section>
 
 <!-- الأدمن -->
 <section id="vA" class="view card" style="display:none">
@@ -389,6 +421,35 @@ function renderAbs(){
 }
 
 /* ===== تبويب مجموعات ===== */
+/* ===== تبويب تسميع المزمور ===== */
+const psalmDone=new Set();
+try{JSON.parse(localStorage.getItem('psalmDone')||'[]').forEach(k=>psalmDone.add(k))}catch(e){}
+const savePsalm=()=>{try{localStorage.setItem('psalmDone',JSON.stringify([...psalmDone]))}catch(e){}};
+function psalmNames(){ // أسماء البنات بس (من غير عناوين ولا أسماء تاسوني)، من غير تكرار، مرتبة أبجدياً
+  const m=new Map();
+  roster.forEach(x=>{const k=norm(x.n);if(k&&!m.has(k))m.set(k,x.n)});
+  return [...m].map(([k,n])=>({k,n})).sort((a,b)=>a.k.localeCompare(b.k,'ar'));
+}
+function renderPsalm(){
+  if(!rosterReady)return;
+  const all=psalmNames(),q=norm($('psalmSearch').value),words=q?q.split(' '):[];
+  const row=(x,d)=>`<button type="button" class="pitem ${d?'done':''}" data-k="${esc(x.k)}"><span class="box"></span><span class="nm">${esc(x.n)}</span></button>`;
+  const todoAll=all.filter(x=>!psalmDone.has(x.k)),done=all.filter(x=>psalmDone.has(x.k));
+  const todo=todoAll.filter(x=>words.every(w=>x.k.includes(w)));
+  $('pcTodo').textContent=todoAll.length;$('pcDone').textContent=done.length;
+  $('psalmTodo').className='';
+  $('psalmTodo').innerHTML=todo.length?todo.map(x=>row(x,false)).join(''):`<p class="mut">${todoAll.length?'مفيش نتايج للبحث':'كلهم سمّعوا ✔'}</p>`;
+  $('psalmDone').innerHTML=done.length?done.map(x=>row(x,true)).join(''):'<p class="mut">لسه محدش اتعلّم.</p>';
+}
+function togglePsalm(e){
+  const b=e.target.closest('.pitem');if(!b)return;
+  const k=b.dataset.k;psalmDone.has(k)?psalmDone.delete(k):psalmDone.add(k);
+  savePsalm();renderPsalm();
+}
+$('psalmTodo').onclick=togglePsalm;$('psalmDone').onclick=togglePsalm;
+$('psalmSearch').oninput=renderPsalm;
+$('psalmReset').onclick=()=>{if(psalmDone.size&&confirm('مسح كل العلامات؟')){psalmDone.clear();savePsalm();renderPsalm()}};
+
 function renderGroups(){
   const box=$('groupsBox');
   if(!rosterReady)return;
@@ -404,29 +465,31 @@ function renderGroups(){
 }
 
 /* ===== التنقل بين التابات ===== */
-function show(which){ // 'V' | 'G' | 'A'
-  ['V','G','A'].forEach(k=>{
+function show(which){ // 'V' | 'G' | 'P' | 'A'
+  ['V','G','P','A'].forEach(k=>{
     const el=$('v'+k);const on=k===which;
     if(on&&el.style.display==='none'){el.style.display='';el.style.animation='none';el.offsetWidth;el.style.animation=''}
     else if(!on)el.style.display='none';
   });
   $('tV').classList.toggle('on',which==='V');
   $('tG').classList.toggle('on',which==='G');
+  $('tP').classList.toggle('on',which==='P');
   $('tA').classList.toggle('on',which==='A');
   $('tabs').classList.toggle('off',which==='A');
-  $('pill').classList.toggle('p1',which==='G');
+  $('pill').className='pill'+(which==='G'?' p1':which==='P'?' p2':'');
   if(which!=='A')lastTab=which;
 }
 let lastTab='V';
 $('tV').onclick=()=>show('V');
 $('tG').onclick=()=>show('G');
+$('tP').onclick=()=>show('P');
 $('tA').onclick=()=>show($('vA').style.display==='none'?'A':lastTab);
 
 async function loadAtt(){try{const r=await fetch('/api/attendance');att=await r.json();renderAbs()}catch(e){}}
 
 $('aDate').value=todayISO();
 (async()=>{
-  try{roster=await loadRoster();roster.forEach((x,i)=>x.id=i);rosterReady=true;renderAbs();renderGroups()}
+  try{roster=await loadRoster();roster.forEach((x,i)=>x.id=i);rosterReady=true;renderAbs();renderGroups();renderPsalm()}
   catch(e){const msg='<span class="bad">'+esc(e.message)+'<br>اتأكد إن الشيت Share ▸ Anyone with the link ▸ Viewer وإن SPREADSHEET_ID صح.</span>';$('viewer').innerHTML=msg;$('groupsBox').innerHTML=msg}
   loadAtt();
 })();
