@@ -180,6 +180,7 @@ button:focus-visible,a:focus-visible{outline:3px solid rgba(214,69,143,.5);outli
 <!-- تسميع المزمور -->
 <section id="vP" class="view" style="display:none">
   <div class="searchWrap"><input id="psalmSearch" type="text" placeholder="ابحث عن اسم…" autocomplete="off"></div>
+    <div id="syncMsg" class="mut" style="text-align:center;margin:-4px 0 10px"></div>
   <div class="card dateRow">
     <label class="lbl" for="psalmDate" style="margin:0;white-space:nowrap">يوم التسميع</label>
     <input type="date" id="psalmDate" style="margin:0">
@@ -453,6 +454,39 @@ try{
 }catch(e){}
 const savePsalm=()=>{try{localStorage.setItem('psalmDone',JSON.stringify(Object.fromEntries(psalmDone)))}catch(e){}};
 const isOpen=k=>pOpen[k]!==false;
+/* ===== مزامنة بين الأجهزة ===== */
+let pBusy=0,pSeeded=false,psalmTimer=null;
+const sig=m=>JSON.stringify([...m].sort());
+const setSync=ok=>{$('syncMsg').textContent=ok?'🟢 متزامن مع باقي الأجهزة':'🔴 مفيش اتصال بالسيرفر — التعليم ممكن ما يتحفظش'};
+function applyServer(done){
+  const next=new Map(Object.entries(done||{}));
+  if(sig(next)===sig(psalmDone))return;
+  psalmDone.clear();next.forEach((d,k)=>psalmDone.set(k,d));
+  savePsalm();renderPsalm();
+}
+async function psalmApi(body){
+  pBusy++;
+  try{
+    const r=await fetch('/api/psalm',body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{});
+    if(!r.ok)throw new Error(await r.text()||'خطأ');
+    return await r.json();
+  }finally{pBusy--}
+}
+async function syncPsalm(){
+  if(pBusy)return;
+  try{
+    const s=await psalmApi();
+    if(s.off){setSync(false);return}
+    if(pBusy)return;
+    // أول مرة والسيرفر فاضي خالص: ارفع العلامات القديمة اللي على الجهاز ده
+    if(!s.at&&!pSeeded&&psalmDone.size){pSeeded=true;const m=await psalmApi({op:'merge',done:Object.fromEntries(psalmDone)});applyServer(m.done);setSync(true);return}
+    pSeeded=true;
+    applyServer(s.done);setSync(true);
+  }catch(e){setSync(false)}
+}
+function startPsalmSync(){syncPsalm();clearInterval(psalmTimer);psalmTimer=setInterval(()=>{if(!document.hidden)syncPsalm()},5000)}
+function stopPsalmSync(){clearInterval(psalmTimer);psalmTimer=null}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&psalmTimer)syncPsalm()});
 function psalmNames(){ // أسماء البنات بس (من غير عناوين ولا أسماء تاسوني)، من غير تكرار، مرتبة أبجدياً
   const m=new Map();
   roster.forEach(x=>{const k=norm(x.n);if(k&&!m.has(k))m.set(k,x.n)});
@@ -488,9 +522,13 @@ function askPsalm(k){
   $('cfM').textContent=was?`هي ما سمّعتش المزمور؟ هتتشال من قايمة يوم ${day}.`:`هي سمّعت المزمور فعلاً؟ هتتسجل في قايمة يوم ${day}.`;
   $('cf').hidden=false;
 }
-$('cfYes').onclick=()=>{
-  if(cfKey){psalmDone.has(cfKey)?psalmDone.delete(cfKey):psalmDone.set(cfKey,$('psalmDate').value||todayISO());savePsalm();renderPsalm()}
-  closeCf();
+$('cfYes').onclick=async()=>{
+  const k=cfKey;closeCf();if(!k)return;
+  const was=psalmDone.has(k),d=$('psalmDate').value||todayISO();
+  was?psalmDone.delete(k):psalmDone.set(k,d);
+  savePsalm();renderPsalm(); // بيظهر عندك فوراً
+  try{const s=await psalmApi(was?{op:'del',k}:{op:'set',k,d});applyServer(s.done);setSync(true)}
+  catch(e){setSync(false);await syncPsalm()}
 };
 $('cfNo').onclick=closeCf;
 $('cf').onclick=e=>{if(e.target===$('cf'))closeCf()};
@@ -509,8 +547,11 @@ $('vP').addEventListener('click',e=>{
 });
 $('psalmSearch').oninput=renderPsalm;
 $('psalmDate').value=todayISO();
-$('psalmReset').onclick=()=>{if(psalmDone.size&&confirm('مسح كل العلامات في كل الأيام؟')){psalmDone.clear();savePsalm();renderPsalm()}};
-
+$('psalmReset').onclick=async()=>{
+  if(!psalmDone.size||!confirm('مسح كل العلامات في كل الأيام (على كل الأجهزة)؟'))return;
+  psalmDone.clear();savePsalm();renderPsalm();
+  try{await psalmApi({op:'clear'});setSync(true)}catch(e){setSync(false);await syncPsalm()}
+};
 function renderGroups(){
   const box=$('groupsBox');
   if(!rosterReady)return;
@@ -539,6 +580,7 @@ function show(which){ // 'V' | 'G' | 'P' | 'A'
   $('tabs').classList.toggle('off',which==='A');
   $('pill').className='pill'+(which==='G'?' p1':which==='P'?' p2':'');
   if(which!=='A')lastTab=which;
+    which==='P'?startPsalmSync():stopPsalmSync();
 }
 let lastTab='V';
 $('tV').onclick=()=>show('V');
