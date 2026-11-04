@@ -71,7 +71,17 @@ main{max-width:720px;margin:-36px auto 40px;padding:0 14px}
 .acts a:hover,.acts button:hover{transform:translateY(-3px) scale(1.1);box-shadow:0 6px 14px rgba(0,0,0,.2)}
 .acts a:active,.acts button:active{transform:scale(.88)}
 
-/* ===== تسميع المزمور ===== */
+/* ===== التسميع ===== */
+.subtabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin-bottom:4px;scrollbar-width:none}
+.subtabs::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;border:1px solid var(--bd);background:#fff;color:var(--mut);font:inherit;font-size:.88rem;font-weight:600;padding:9px 16px;border-radius:99px;cursor:pointer;white-space:nowrap;transition:transform .2s var(--ease),background .25s,color .25s,box-shadow .25s}
+.chip:active{transform:scale(.94)}
+.chip:hover{background:#faf6fe}
+.chip.on{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(214,69,143,.3)}
+.chip.arch{border-style:dashed}
+.chip.archToggle.on2{background:#f1e8fb;color:var(--p1)}
+.archNote{background:#fff7e6;border:1px solid #f3dfb0;color:#8a6410;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:.88rem;text-align:center}
+
 .searchWrap{position:sticky;top:8px;z-index:4;margin-bottom:12px}
 .searchWrap input{margin:0;padding:13px 16px;border-radius:14px;box-shadow:0 6px 18px rgba(109,63,192,.14);background:#fff}
 .ptitle{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -79,14 +89,18 @@ main{max-width:720px;margin:-36px auto 40px;padding:0 14px}
 .pitem{display:flex;align-items:center;gap:12px;width:100%;text-align:start;border:0;border-bottom:1px solid var(--bd);background:#fff;padding:12px 6px;font:inherit;color:var(--fg);cursor:pointer;transition:background .2s}
 .pitem:last-child{border-bottom:0}
 .pitem:hover{background:#faf6fe}
+.pitem.ro{cursor:default}
+.pitem.ro:hover{background:#fff}
 .pitem .box{flex-shrink:0;width:24px;height:24px;border-radius:8px;border:2px solid #cdbbe6;background:#fff;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.95rem;font-weight:700;transition:background .2s,border-color .2s,transform .2s}
 .pitem:active .box{transform:scale(.85)}
+.pitem.ro:active .box{transform:none}
 .pitem.done .box{background:linear-gradient(135deg,var(--p1),var(--p2));border-color:transparent}
 .pitem.done .nm{color:var(--mut)}
 .pitem.done .box::after{content:"✓"}
 .smallBtn{border:1px solid var(--bd);background:#fff;color:var(--p1);font:inherit;font-size:.8rem;font-weight:600;padding:6px 12px;border-radius:99px;cursor:pointer;transition:transform .15s,background .2s}
 .smallBtn:hover{background:#f1e8fb}
 .smallBtn:active{transform:scale(.93)}
+.smallBtn.dng{color:var(--no)}
 
 .dateRow{display:flex;align-items:center;gap:10px;padding:10px 14px}
 .colHead{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:none;padding:0;font:inherit;font-size:1.05rem;font-weight:700;color:var(--p1);cursor:pointer;text-align:start}
@@ -141,6 +155,15 @@ label.lbl{display:block;font-size:.85rem;color:var(--mut);margin:4px 2px 6px}
 .ok:active{transform:scale(.97)}
 .ok:disabled{opacity:.6;transform:none;box-shadow:none;cursor:wait}
 
+.sep{border:0;border-top:1px solid var(--bd);margin:22px 0 18px}
+.addTabRow{display:flex;gap:8px;align-items:stretch}
+.addTabRow input{margin:0;flex:1}
+.addTabRow .ok{width:auto;flex-shrink:0;padding:0 22px}
+.trow{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;animation:rowIn .35s var(--ease) both}
+.trow .tn{flex:1;min-width:140px;font-weight:600}
+.trow .tn small{display:block;font-weight:400;color:var(--mut);margin-top:2px}
+.trow .tb{display:flex;gap:6px}
+
 .mut{color:var(--mut);font-size:.88rem}.bad{color:var(--no)}.good{color:var(--ok)}
 .msg{animation:pop .4s var(--ease) both}
 
@@ -168,7 +191,7 @@ button:focus-visible,a:focus-visible{outline:3px solid rgba(214,69,143,.5);outli
   <span class="pill" id="pill"></span>
   <button id="tV" class="on" type="button">الغياب</button>
   <button id="tG" type="button">مجموعات</button>
-  <button id="tP" type="button">تسميع المزمور</button>
+  <button id="tP" type="button">التسميع</button>
 </div>
 
 <!-- الغياب -->
@@ -177,20 +200,25 @@ button:focus-visible,a:focus-visible{outline:3px solid rgba(214,69,143,.5);outli
 <!-- مجموعات -->
 <section id="vG" class="view" style="display:none"><div id="groupsBox" class="mut">جاري التحميل…</div></section>
 
-<!-- تسميع المزمور -->
+<!-- التسميع -->
 <section id="vP" class="view" style="display:none">
+  <div class="subtabs" id="subtabs"></div>
   <div class="searchWrap"><input id="psalmSearch" type="text" placeholder="ابحث عن اسم…" autocomplete="off"></div>
-    <div id="syncMsg" class="mut" style="text-align:center;margin:-4px 0 10px"></div>
-  <div class="card dateRow">
-    <label class="lbl" for="psalmDate" style="margin:0;white-space:nowrap">يوم التسميع</label>
-    <input type="date" id="psalmDate" style="margin:0">
+  <div id="syncMsg" class="mut" style="text-align:center;margin:-4px 0 10px"></div>
+  <div id="noTabs" class="card mut" style="display:none;text-align:center">مفيش تبويبات تسميع. الأدمن يقدر يضيف تبويب جديد.</div>
+  <div id="psalmBody">
+    <div id="archNote" class="archNote" style="display:none">🗂 التبويب ده في الأرشيف — للعرض فقط.</div>
+    <div class="card dateRow" id="dateCard">
+      <label class="lbl" for="psalmDate" style="margin:0;white-space:nowrap">يوم التسميع</label>
+      <input type="date" id="psalmDate" style="margin:0">
+    </div>
+    <div class="card">
+      <button type="button" class="colHead open" id="psalmTodoHead" data-col="todo"><span>لسه ما سمّعوش</span><span class="left"><span class="badge n" id="pcTodo">0</span><span class="chev">▾</span></span></button>
+      <div id="psalmTodo" class="colBody mut">جاري التحميل…</div>
+    </div>
+    <div id="psalmDays"></div>
+    <div style="text-align:center;margin-bottom:12px"><button class="smallBtn" id="psalmReset" type="button">مسح كل العلامات</button></div>
   </div>
-  <div class="card">
-    <button type="button" class="colHead open" id="psalmTodoHead" data-col="todo"><span>لسه ما سمّعوش</span><span class="left"><span class="badge n" id="pcTodo">0</span><span class="chev">▾</span></span></button>
-    <div id="psalmTodo" class="colBody mut">جاري التحميل…</div>
-  </div>
-  <div id="psalmDays"></div>
-  <div style="text-align:center;margin-bottom:12px"><button class="smallBtn" id="psalmReset" type="button">مسح كل العلامات</button></div>
 </section>
 
 <!-- الأدمن -->
@@ -213,6 +241,17 @@ button:focus-visible,a:focus-visible{outline:3px solid rgba(214,69,143,.5);outli
 
   <button class="ok" id="okBtn" type="button">OK ✔</button>
   <div id="aMsg" style="margin-top:12px"></div>
+
+  <hr class="sep">
+
+  <h2>تبويبات التسميع</h2>
+  <p class="mut" style="margin:0 0 10px">بيستخدم نفس الباسورد اللي فوق. الأرشفة بتخفي التبويب وبتحافظ على بياناته، أما الحذف فبيمسحه نهائياً.</p>
+  <div class="addTabRow">
+    <input id="newTabName" type="text" placeholder="اسم التبويب الجديد" maxlength="60" autocomplete="off">
+    <button class="ok" id="addTabBtn" type="button">إضافة</button>
+  </div>
+  <div id="adminTabs" style="margin-top:14px"></div>
+  <div id="tabMsg" style="margin-top:8px"></div>
 </section>
 </main>
 
@@ -247,6 +286,7 @@ const SHEETS = [
 const $=id=>document.getElementById(id);
 const norm=s=>String(s||'').toLowerCase().replace(/[\u064B-\u065F\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const has=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 const isName=s=>{const t=String(s||'').trim();return !!t&&/\p{L}/u.test(t)&&!/^[\d\s.+\-\/]+$/.test(t)&&!/^(total|name|الاسم|اسم|المجموع|الاجمالي)$/i.test(t)};
 // نفس الاسم، أو اسم مختصر (3 كلمات على الأقل) هو بداية الاسم الكامل
 const same=(a,b)=>{if(a===b)return true;const x=a.split(' '),y=b.split(' ');const s=x.length<y.length?x:y,l=x.length<y.length?y:x;return s.length>=3&&s.every((w,i)=>w===l[i])};
@@ -443,26 +483,49 @@ function renderAbs(){
   v.querySelectorAll('.grp').forEach(b=>b.onclick=()=>{openG=openG===b.dataset.g?null:b.dataset.g;renderAbs()});
 }
 
-/* ===== تبويب مجموعات ===== */
-/* ===== تبويب تسميع المزمور ===== */
-const psalmDone=new Map();   // مفتاح الاسم -> يوم التسميع (yyyy-mm-dd)
-const pOpen={};              // حالة فتح/قفل القوايم (الافتراضي: مفتوحة)
-try{
-  const v=JSON.parse(localStorage.getItem('psalmDone')||'{}');
-  if(Array.isArray(v))v.forEach(k=>psalmDone.set(k,todayISO())); // نسخة قديمة كانت بتحفظ الأسماء بس
-  else Object.entries(v).forEach(([k,d])=>psalmDone.set(k,d));
-}catch(e){}
-const savePsalm=()=>{try{localStorage.setItem('psalmDone',JSON.stringify(Object.fromEntries(psalmDone)))}catch(e){}};
+/* ===== تبويب التسميع (مع التبويبات الفرعية) ===== */
+const DEF_ID='t1',DEF_NAME='مز "اللهم باسمك خلصني"';
+// الحالة: التبويبات + علامات كل تبويب { اسم: يوم التسميع }
+let P={tabs:[{id:DEF_ID,name:DEF_NAME,archived:false}],data:{[DEF_ID]:{}},at:null};
+let curTab=DEF_ID,showArch=false,pLoaded=false,legacyObj=null;
+const pOpen={};              // حالة فتح/قفل القوايم (الافتراضي: مفتوحة) — لكل تبويب لوحده
+const K=k=>curTab+'|'+k;
 const isOpen=k=>pOpen[k]!==false;
+
+// تحميل الكاش المحلي (ولو لسه فيه نسخة قديمة بتحفظ العلامات القديمة بنحوّلها لتبويب مز "اللهم باسمك خلصني")
+try{
+  const c=JSON.parse(localStorage.getItem('psalmState')||'null');
+  if(c&&Array.isArray(c.tabs)&&c.tabs.length){P={tabs:c.tabs,data:c.data||{},at:c.at||null}}
+  else{
+    const v=JSON.parse(localStorage.getItem('psalmDone')||'{}'),o={};
+    if(Array.isArray(v))v.forEach(k=>o[k]=todayISO());else Object.assign(o,v);
+    P.data[DEF_ID]=o;
+    if(Object.keys(o).length)legacyObj=o; // هتتدمج في السيرفر مرة واحدة من غير ما تمسح حاجة
+  }
+}catch(e){}
+
+const tabById=id=>P.tabs.find(t=>t.id===id);
+const activeTabs=()=>P.tabs.filter(t=>!t.archived);
+const archTabs=()=>P.tabs.filter(t=>t.archived);
+const curData=()=>P.data[curTab]||(P.data[curTab]={});
+const curArchived=()=>{const t=tabById(curTab);return !!(t&&t.archived)};
+const savePsalm=()=>{try{localStorage.setItem('psalmState',JSON.stringify(P))}catch(e){}};
+function ensureCur(){
+  const t=tabById(curTab);
+  if(!t||(t.archived&&!showArch)){const a=activeTabs()[0]||(showArch?archTabs()[0]:null);curTab=a?a.id:null}
+}
+ensureCur();
+
 /* ===== مزامنة بين الأجهزة ===== */
-let pBusy=0,pSeeded=false,psalmTimer=null;
-const sig=m=>JSON.stringify([...m].sort());
+let pBusy=0,psalmTimer=null;
+const sig=s=>JSON.stringify(s.tabs.map(t=>[t.id,t.name,!!t.archived,Object.entries(s.data[t.id]||{}).sort()]));
 const setSync=ok=>{$('syncMsg').textContent=ok?'🟢 متزامن مع باقي الأجهزة':'🔴 مفيش اتصال بالسيرفر — التعليم ممكن ما يتحفظش'};
-function applyServer(done){
-  const next=new Map(Object.entries(done||{}));
-  if(sig(next)===sig(psalmDone))return;
-  psalmDone.clear();next.forEach((d,k)=>psalmDone.set(k,d));
-  savePsalm();renderPsalm();
+function applyServer(s){
+  if(!s||!Array.isArray(s.tabs))return;
+  const next={tabs:s.tabs,data:s.data||{},at:s.at||null};
+  const first=!pLoaded;pLoaded=true;
+  if(!first&&sig(next)===sig(P))return;
+  P=next;savePsalm();ensureCur();renderPsalm();renderAdminTabs();
 }
 async function psalmApi(body){
   pBusy++;
@@ -478,66 +541,95 @@ async function syncPsalm(){
     const s=await psalmApi();
     if(s.off){setSync(false);return}
     if(pBusy)return;
-    // أول مرة والسيرفر فاضي خالص: ارفع العلامات القديمة اللي على الجهاز ده
-    if(!s.at&&!pSeeded&&psalmDone.size){pSeeded=true;const m=await psalmApi({op:'merge',done:Object.fromEntries(psalmDone)});applyServer(m.done);setSync(true);return}
-    pSeeded=true;
-    applyServer(s.done);setSync(true);
+    // علامات قديمة على الجهاز ده: ندمجها مرة واحدة في تبويب مز "اللهم باسمك خلصني" (بيضيف الناقص بس)
+    if(legacyObj&&s.tabs.some(t=>t.id===DEF_ID&&!t.archived)){
+      const m=await psalmApi({op:'merge',t:DEF_ID,done:legacyObj});
+      legacyObj=null;applyServer(m);setSync(true);return;
+    }
+    applyServer(s);setSync(true);
   }catch(e){setSync(false)}
 }
 function startPsalmSync(){syncPsalm();clearInterval(psalmTimer);psalmTimer=setInterval(()=>{if(!document.hidden)syncPsalm()},5000)}
 function stopPsalmSync(){clearInterval(psalmTimer);psalmTimer=null}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&psalmTimer)syncPsalm()});
+
 function psalmNames(){ // أسماء البنات بس (من غير عناوين ولا أسماء تاسوني)، من غير تكرار، مرتبة أبجدياً
   const m=new Map();
   roster.forEach(x=>{const k=norm(x.n);if(k&&!m.has(k))m.set(k,x.n)});
   return [...m].map(([k,n])=>({k,n})).sort((a,b)=>a.k.localeCompare(b.k,'ar'));
 }
+
+function renderSub(){
+  const a=activeTabs(),r=archTabs();
+  const chip=t=>`<button type="button" class="chip ${t.id===curTab?'on':''} ${t.archived?'arch':''}" data-t="${esc(t.id)}">${esc(t.name)}</button>`;
+  let h=a.map(chip).join('');
+  if(r.length)h+=`<button type="button" class="chip archToggle ${showArch?'on2':''}" data-arch="1">🗂 الأرشيف (${r.length})</button>`;
+  if(showArch)h+=r.map(chip).join('');
+  $('subtabs').innerHTML=h;
+}
 function renderPsalm(){
-  if(!rosterReady)return;
+  renderSub();
+  const none=!curTab;
+  $('noTabs').style.display=none?'':'none';
+  $('psalmBody').style.display=none?'none':'';
+  if(none||!rosterReady)return;
+  const ro=curArchived(),D=curData();
+  $('archNote').style.display=ro?'':'none';
+  $('dateCard').style.display=ro?'none':'';
+  $('psalmReset').parentElement.style.display=ro?'none':'';
   const all=psalmNames(),words=norm($('psalmSearch').value).split(' ').filter(Boolean);
-  const row=(x,d)=>`<button type="button" class="pitem ${d?'done':''}" data-k="${esc(x.k)}"><span class="box"></span><span class="nm">${esc(x.n)}</span></button>`;
-  const todoAll=all.filter(x=>!psalmDone.has(x.k));
+  const row=(x,d)=>`<button type="button" class="pitem ${d?'done':''} ${ro?'ro':''}" data-k="${esc(x.k)}"><span class="box"></span><span class="nm">${esc(x.n)}</span></button>`;
+  const todoAll=all.filter(x=>!has(D,x.k));
   const todo=todoAll.filter(x=>words.every(w=>x.k.includes(w)));
   $('pcTodo').textContent=todoAll.length;
-  $('psalmTodoHead').classList.toggle('open',isOpen('todo'));
-  $('psalmTodo').className='colBody'+(isOpen('todo')?'':' shut');
+  $('psalmTodoHead').classList.toggle('open',isOpen(K('todo')));
+  $('psalmTodo').className='colBody'+(isOpen(K('todo'))?'':' shut');
   $('psalmTodo').innerHTML=todo.length?todo.map(x=>row(x,false)).join(''):`<p class="mut">${todoAll.length?'مفيش نتايج للبحث':'كلهم سمّعوا ✔'}</p>`;
   // قايمة لكل يوم
   const byDay={};
-  all.forEach(x=>{const d=psalmDone.get(x.k);if(d)(byDay[d]=byDay[d]||[]).push(x)});
+  all.forEach(x=>{if(has(D,x.k)){const d=D[x.k];(byDay[d]=byDay[d]||[]).push(x)}});
   const days=Object.keys(byDay).sort().reverse();
   $('psalmDays').innerHTML=days.length?days.map(d=>{
     const key='day:'+d;
-    return `<div class="card"><button type="button" class="colHead ${isOpen(key)?'open':''}" data-col="${esc(key)}"><span>سمّعوا يوم ${esc(fmtDate(d)||d)} ✔</span><span class="left"><span class="badge z">${byDay[d].length}</span><span class="chev">▾</span></span></button><div class="colBody${isOpen(key)?'':' shut'}">${byDay[d].map(x=>row(x,true)).join('')}</div></div>`;
+    return `<div class="card"><button type="button" class="colHead ${isOpen(K(key))?'open':''}" data-col="${esc(key)}"><span>سمّعوا يوم ${esc(fmtDate(d)||d)} ✔</span><span class="left"><span class="badge z">${byDay[d].length}</span><span class="chev">▾</span></span></button><div class="colBody${isOpen(K(key))?'':' shut'}">${byDay[d].map(x=>row(x,true)).join('')}</div></div>`;
   }).join(''):'<div class="card mut">لسه محدش اتعلّم.</div>';
 }
+
+// اختيار التبويب الفرعي / فتح الأرشيف
+$('subtabs').addEventListener('click',e=>{
+  const b=e.target.closest('.chip');if(!b)return;
+  if(b.dataset.arch){showArch=!showArch;ensureCur();renderPsalm();return}
+  curTab=b.dataset.t;renderPsalm();
+});
+
 // تأكيد قبل أي تعليم / إلغاء تعليم
 let cfKey=null;
 function closeCf(){$('cf').hidden=true;cfKey=null}
 function askPsalm(k){
+  if(curArchived())return;
   const x=psalmNames().find(n=>n.k===k);if(!x)return;
-  cfKey=k;const was=psalmDone.get(k);
+  cfKey=k;const was=has(curData(),k)?curData()[k]:null;
   const day=fmtDate(was||$('psalmDate').value||todayISO());
   $('cfT').textContent=x.n;
-  $('cfM').textContent=was?`هي ما سمّعتش المزمور؟ هتتشال من قايمة يوم ${day}.`:`هي سمّعت المزمور فعلاً؟ هتتسجل في قايمة يوم ${day}.`;
+  $('cfM').textContent=was?`هي ما سمّعتش؟ هتتشال من قايمة يوم ${day}.`:`هي سمّعت فعلاً؟ هتتسجل في قايمة يوم ${day}.`;
   $('cf').hidden=false;
 }
 $('cfYes').onclick=async()=>{
-  const k=cfKey;closeCf();if(!k)return;
-  const was=psalmDone.has(k),d=$('psalmDate').value||todayISO();
-  was?psalmDone.delete(k):psalmDone.set(k,d);
+  const k=cfKey;closeCf();if(!k||curArchived())return;
+  const t=curTab,D=curData(),was=has(D,k),d=$('psalmDate').value||todayISO();
+  was?delete D[k]:(D[k]=d);
   savePsalm();renderPsalm(); // بيظهر عندك فوراً
-  try{const s=await psalmApi(was?{op:'del',k}:{op:'set',k,d});applyServer(s.done);setSync(true)}
+  try{const s=await psalmApi(was?{op:'del',t,k}:{op:'set',t,k,d});applyServer(s);setSync(true)}
   catch(e){setSync(false);await syncPsalm()}
 };
 $('cfNo').onclick=closeCf;
 $('cf').onclick=e=>{if(e.target===$('cf'))closeCf()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCf()});
 // فتح/قفل القوايم + الضغط على اسم
-$('vP').addEventListener('click',e=>{
+$('psalmBody').addEventListener('click',e=>{
   const h=e.target.closest('.colHead');
   if(h){
-    const k=h.dataset.col,open=!isOpen(k);pOpen[k]=open;
+    const k=K(h.dataset.col),open=!isOpen(k);pOpen[k]=open;
     h.classList.toggle('open',open);
     const body=h.nextElementSibling;body.classList.toggle('shut',!open);
     if(open){body.classList.remove('anim');body.offsetWidth;body.classList.add('anim')}
@@ -548,10 +640,55 @@ $('vP').addEventListener('click',e=>{
 $('psalmSearch').oninput=renderPsalm;
 $('psalmDate').value=todayISO();
 $('psalmReset').onclick=async()=>{
-  if(!psalmDone.size||!confirm('مسح كل العلامات في كل الأيام (على كل الأجهزة)؟'))return;
-  psalmDone.clear();savePsalm();renderPsalm();
-  try{await psalmApi({op:'clear'});setSync(true)}catch(e){setSync(false);await syncPsalm()}
+  const t=curTab,tb=tabById(t);
+  if(!tb||tb.archived||!Object.keys(curData()).length)return;
+  if(!confirm('مسح كل العلامات في تبويب "'+tb.name+'" (على كل الأجهزة)؟'))return;
+  P.data[t]={};savePsalm();renderPsalm();
+  try{applyServer(await psalmApi({op:'clear',t}));setSync(true)}catch(e){setSync(false);await syncPsalm()}
 };
+
+/* ===== الأدمن: إدارة تبويبات التسميع (إضافة / أرشفة / حذف) ===== */
+function renderAdminTabs(){
+  const box=$('adminTabs');
+  box.innerHTML=P.tabs.length?P.tabs.map((t,i)=>{
+    const n=Object.keys(P.data[t.id]||{}).length;
+    return `<div class="trow" style="animation-delay:${i*35}ms"><div class="tn">${esc(t.name)}<small>${t.archived?'🗂 في الأرشيف · ':''}${n} اتعلّموا</small></div><div class="tb"><button type="button" class="smallBtn" data-act="arch" data-id="${esc(t.id)}">${t.archived?'إلغاء الأرشفة':'أرشفة'}</button><button type="button" class="smallBtn dng" data-act="del" data-id="${esc(t.id)}">حذف</button></div></div>`;
+  }).join(''):'<p class="mut">مفيش تبويبات.</p>';
+}
+async function adminTabOp(body,okMsg){
+  const m=$('tabMsg'),pw=$('pw').value;
+  if(!pw){m.innerHTML='<span class="bad msg">اكتب الباسورد فوق الأول</span>';return false}
+  m.textContent='جاري الحفظ…';
+  try{
+    const s=await psalmApi({...body,password:pw});
+    applyServer(s);setSync(true);
+    m.innerHTML=`<span class="good msg">✔ ${esc(okMsg)}</span>`;
+    return true;
+  }catch(e){
+    m.innerHTML='<span class="bad msg">فشل: '+esc(e.message==='unauthorized'?'الباسورد غلط':e.message)+'</span>';
+    return false;
+  }
+}
+$('addTabBtn').onclick=async()=>{
+  const name=$('newTabName').value.trim();
+  if(!name){$('tabMsg').innerHTML='<span class="bad msg">اكتب اسم التبويب</span>';return}
+  const b=$('addTabBtn');b.disabled=true;
+  if(await adminTabOp({op:'tab-add',name},'تمت إضافة التبويب'))$('newTabName').value='';
+  b.disabled=false;
+};
+$('newTabName').addEventListener('keydown',e=>{if(e.key==='Enter')$('addTabBtn').click()});
+$('adminTabs').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-act]');if(!b)return;
+  const t=tabById(b.dataset.id);if(!t)return;
+  if(b.dataset.act==='arch'){
+    await adminTabOp({op:'tab-archive',id:t.id,archived:!t.archived},t.archived?'اتشالت من الأرشيف':'اتنقل للأرشيف');
+  }else if(b.dataset.act==='del'){
+    if(!confirm('حذف تبويب "'+t.name+'" وكل علاماته نهائياً؟\nلو عايز تحتفظ بالبيانات استخدم الأرشفة بدل الحذف.'))return;
+    await adminTabOp({op:'tab-del',id:t.id},'اتحذف التبويب');
+  }
+});
+
+/* ===== تبويب مجموعات ===== */
 function renderGroups(){
   const box=$('groupsBox');
   if(!rosterReady)return;
@@ -580,7 +717,8 @@ function show(which){ // 'V' | 'G' | 'P' | 'A'
   $('tabs').classList.toggle('off',which==='A');
   $('pill').className='pill'+(which==='G'?' p1':which==='P'?' p2':'');
   if(which!=='A')lastTab=which;
-    which==='P'?startPsalmSync():stopPsalmSync();
+  which==='P'?startPsalmSync():stopPsalmSync();
+  if(which==='A')syncPsalm(); // عشان قايمة التبويبات في الأدمن تبقى محدّثة
 }
 let lastTab='V';
 $('tV').onclick=()=>show('V');
@@ -591,10 +729,12 @@ $('tA').onclick=()=>show($('vA').style.display==='none'?'A':lastTab);
 async function loadAtt(){try{const r=await fetch('/api/attendance');att=await r.json();renderAbs()}catch(e){}}
 
 $('aDate').value=todayISO();
+renderSub();renderAdminTabs();
 (async()=>{
   try{roster=await loadRoster();roster.forEach((x,i)=>x.id=i);rosterReady=true;renderAbs();renderGroups();renderPsalm()}
   catch(e){const msg='<span class="bad">'+esc(e.message)+'<br>اتأكد إن الشيت Share ▸ Anyone with the link ▸ Viewer وإن SPREADSHEET_ID صح.</span>';$('viewer').innerHTML=msg;$('groupsBox').innerHTML=msg}
   loadAtt();
+  syncPsalm(); // يجيب التبويبات من السيرفر أول ما الصفحة تفتح
 })();
 </script>
 </body>
